@@ -119,25 +119,25 @@ static void *coalesce(void *bp)
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
 
-    if (prev_alloc && next_alloc) { /* Case 1 */
-        return bp;
+    if (prev_alloc && next_alloc) {                 /* Case 1 */
+        return bp;                                  /* Previous and next blocks both allocated */
     }
 
-    else if (prev_alloc && !next_alloc) { /* Case 2 */
-        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));
+    else if (prev_alloc && !next_alloc) {           /* Case 2 */
+        size += GET_SIZE(HDRP(NEXT_BLKP(bp)));      /* Previous block allocated, next block free */
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
     }
 
-    else if (!prev_alloc && next_alloc) { /* Case 3 */
-        size += GET_SIZE(HDRP(PREV_BLKP(bp)));
+    else if (!prev_alloc && next_alloc) {           /* Case 3 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp)));      /* Previous block free, next block allocated */
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
     }
 
-    else { /* Case 4 */
-        size += GET_SIZE(HDRP(PREV_BLKP(bp))) +
+    else {                                          /* Case 4 */
+        size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
             GET_SIZE(FTRP(NEXT_BLKP(bp)));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
@@ -227,6 +227,12 @@ void *mm_realloc(void *ptr, size_t size)
     return newptr;
 }
 
+
+/*
+ * Helper functions 
+ *
+ */
+
 /* Finds where the block we want to allocate should go */
 static void *find_fit(size_t asize) {
     /* First fit search */
@@ -239,6 +245,7 @@ static void *find_fit(size_t asize) {
     }
     return NULL;    /* No fit */
 }
+
 
 /* Function to actually place the allocated block */
 static void place(void *bp, size_t asize) {
@@ -274,8 +281,17 @@ static void *extend_heap(size_t words)
     PUT(FTRP(bp), PACK(size, 0)); /* Free block footer */
     PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); /* New epilogue header */
 
-    /* Coalesce if the previous block was free */
+    /* Coalesce if the previous end of heap block was free */
     return coalesce(bp);
+}
+
+/* Rounds sizes to align by DWORDs */
+static int multofeight(size_t asize) {
+    if(asize <= DSIZE) {
+        return MIN_BLK_SIZE;
+    } else{
+        return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
+    }
 }
 
 
@@ -332,13 +348,5 @@ static int check_invariant(void){
 }
 
 
-/* Rounds sizes to align by DWORDs */
-static int multofeight(size_t asize) {
-    if(asize <= DSIZE) {
-        return MIN_BLK_SIZE;
-    } else{
-        return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
-    }
-}
 
 
