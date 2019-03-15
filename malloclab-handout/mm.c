@@ -302,11 +302,22 @@ static void *extend_heap(size_t words)
 
 
 /* Check invariant of the prologue and epilogue blocks */
-/*static int check_invariant(void){
+static int check_invariant(void){
      // Check the prologue block is 8 byte allocated 
-    if(mem_heap_lo + )
+    static PRO_BLKP = heap_listp, PRO_HDRP = HDRP(PRO_BLKP), PRO_FTRP = FTRP(PRO_BLKP),
+           EPI_BLPK = mem_heap_hi();
+    //Check the prologue block's invariance
+    if(!(GET_SIZE(PRO_HDRP) == 8 && GET_ALLOC(PRO_HDRP) == 1 &&
+         GET_SIZE(PRO_FTRP) == 8 && GET_ALLOC(PRO_FTRP) == 1)) {
+        return 1;       //error
+    }   //Check the epilogue invariance 
+    else if(GET_SIZE(EPI_BLPK) == 0 && GET_ALLOC(EPI_BLPK) == 1) {
+        return 1;       //error
+    }
+    //Both invariants pass
+    return 0;
 }
-*/
+
 
 
 
