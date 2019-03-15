@@ -278,7 +278,10 @@ static void *extend_heap(size_t words)
 
 
 /* Heap Checker */
-//static int mm_check(void) {
+static int mm_check(void) {
+    int sum = 0;
+
+    sum += check_invariant();
     /*
      * Implement this
      //is every block in the free list marked as free?
@@ -297,7 +300,8 @@ static void *extend_heap(size_t words)
      * have them return 0 if they're good and keep adding the values
      * if our sum ends up being 0, return the invert of that (nonzero means we good)
      */
-//}
+    return sum;
+}
 
 /*
  * Helper functions for the heap checker
