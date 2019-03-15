@@ -229,90 +229,98 @@ void *mm_malloc(size_t size)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    void *oldptr = ptr;
-    void *newptr;
-    void *retptr;
-    size_t aSize;
-    size_t oldSize;
 
-    if(size == 0) {         //size == 0  case
+    size_t old_size; //the size of the current block 
+    void *newptr; 
+    void *pointer;
+
+    if(size == 0) { //if the new size given is 0, then free the block and return the root pointer to the newly freed block
         mm_free(ptr);
-        return freeblk_root;    //or should it be NULL?
+        return freeblk_root; 
     }
 
-    // newptr = mm_malloc(size);
-    // if (newptr == NULL)     
-    //     return NULL;
-    if(ptr == NULL){        //ptr is null case
+    if(ptr == NULL) { //if there is no pointer given or given NULL, then allocate a block of the given size
         return mm_malloc(size);
     }
 
-    //Falls through if ptr is not NULL and we actually reallocate
-    oldSize = GET_SIZE(HDRP(oldptr));       
-    aSize = multofeight(size);              //adjust the realloc size
-
-    /* No change in size => don't do anything */
-    if(oldSize == aSize) {
-        return oldptr;
-    }
-
-    /* Initialize some useful pointers and relevant data */
-    void   *nextptr = NEXT_BLKP(ptr);    
-    size_t nextalloc = GET_ALLOC(HDRP(nextptr)); 
-    size_t nextptr_size = GET_SIZE(HDRP(nextptr));
-
-    void   *prevptr = PREV_BLKP(ptr);  
-    size_t prevalloc = GET_ALLOC(FTRP(prevptr));
-    size_t prevptr_size = GET_SIZE(FTRP(prevptr)); 
-
-
-    size_t mergeSize = oldSize;
-    /* Case where previous block is allocated */
-    if(prevalloc) {
-        /* Previous Allocated, Next is free */
-        if(!nextalloc) {
-            mergeSize += nextptr_size;
-            delete_freeblk(nextptr);
-        }
-        retptr = ptr;
-    } else {  /* Case where previous block was free */
-        /* Update mergeSize */
-        /* Previous free, next is free */
-        if(!nextalloc) {
-            mergeSize += prevptr_size + nextptr_size;
-            delete_freeblk(nextptr);
-        } else {    /* Previous free, next allocated */
-            mergeSize += prevptr_size;
-        }
-
-        retptr = prevptr;
-
-        if(mergeSize >= aSize) {
-            delete_freeblk(prevptr);
-            memcpy(prevptr, ptr, (oldSize - DSIZE));
-        }
-    }
+    old_size = GET_SIZE(HDRP(ptr)); // get the current size of the block, before reallocating
     
-    /* Check if we need to re-align */
-    if(mergeSize >= aSize) {
-        /* Do we need to realign? */
-        if((mergeSize - aSize) < MIN_BLK_SIZE) {
-            PUT(HDRP(retptr), PACK(mergeSize, 1));
-            PUT(FTRP(retptr), PACK(mergeSize, 1));
-        } else {
-            PUT(HDRP(retptr), PACK(aSize, 1));
-            PUT(FTRP(retptr), PACK(aSize, 1));
+    size_t asize = multofeight(size); //round up to the nearest multiple of 8
 
-            PUT(HDRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
-            PUT(FTRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
-            add_freeblk(NEXT_BLKP(retptr));
+    if(asize == old_size){ //if the current & new size are no different, then simply return the same pointer
+        return ptr;     
+    }
+
+    size_t new_size = old_size; //first set the combined size to the old size, in case we can't expand left or right 
+
+    void * prev_ptr = PREV_BLKP(ptr); // get the pointer of the previous block
+    size_t prevalloc = GET_ALLOC(FTRP(PREV_BLKP(ptr))); // get the allocated bit of the previous block
+    size_t prev_ptr_size = GET_SIZE(FTRP(PREV_BLKP(ptr))); // get the size of the previous block
+
+    void * next_ptr = NEXT_BLKP(ptr); // get the pointer of the next block   
+    size_t nextalloc = GET_ALLOC(HDRP(next_ptr)); // get the allocated bit of the block (1 or 0)
+    size_t next_ptr_size = GET_SIZE(HDRP(next_ptr)); // get the size of the next block
+
+    if(prevalloc) { // if the previous block is allocated/not free
+
+        if(!nextalloc) {  // if the next block is not allocated/free
+            new_size = old_size + next_ptr_size; // combine the sizes of current & next 
+            rem_fblock(next_ptr); // take the next block out of the linked list of free blocks
         }
-        return  prevptr;
-    } else {
-        newptr = mm_malloc(size);
-        memcpy(newptr, ptr, oldSize);
+        
+        pointer = ptr; // set the pointer returned to the pointer provided
+    }
 
-        mm_free(ptr);
+    else { //if the previous block is unallocated/free
+
+        if(!nextalloc) { //if the next block is also unallocated/free
+            new_size += prev_ptr_size  + next_ptr_size; // add both the previous block size and the next block size
+            delete_freeblk(next_ptr); // remove the next block from the linked list of free blocks
+        }
+        else { //only the previous block is free
+            new_size += prev_ptr_size; // add the previous block size
+        }
+
+        pointer = prev_ptr; // set the pointer returned to the pointer provided's previous block's pointer
+
+        if (new_size >= asize){ //if the combined size is large enough for the size we want (rounded up)
+
+            delete_freeblk(prev_ptr); //remove the previous block from the linked list of free blocks
+            memcpy(prev_ptr, ptr, (old_size-8)); //copy over the data from the current block to the previous block, minus the header & footer
+
+        }
+    }
+
+    if (new_size >= asize){ //if the combined size is large enough for the size we want (rounded up)
+
+        if((new_size - asize) < MIN_BLK_SIZE){ // if the remaining uninitialized space is less than the minimum size, then it cannot be split so we just update the header & footer
+            PUT(HDRP(pointer), PACK(new_size, 1)); 
+            PUT(FTRP(pointer), PACK(new_size, 1));          
+        } 
+
+        else { //if the remaining uninitialized space IS more than or equal to the minimum size, then we can split the current or next block
+            PUT(HDRP(pointer), PACK(asize, 1)); //updating the header & footer with only the rounded-up size requested
+            PUT(FTRP(pointer), PACK(asize, 1)); 
+                //void * splitptr = NEXT_BLKP(prevptr);
+
+            PUT(HDRP(NEXT_BLKP(pointer)), PACK(new_size - asize, 0)); //updating the header & footer of the next block with the uninitilaized remainder size & an allocated bit of 0
+            PUT(FTRP(NEXT_BLKP(pointer)), PACK(new_size - asize, 0)); 
+
+            add_freeblk(NEXT_BLKP(pointer)); //since the next block is labeled as unallocated, add it to the linked list of free blocks
+
+        }
+
+        return pointer;
+        }
+
+        else {        
+        
+        //copy the old data:
+        newptr = mm_malloc(size); //if the combined size is NOT large enough for the size we want, we allocate the new size in a completely new block
+        memcpy(newptr, ptr, old_size); //copy over the current pointer's data to the new pointer, keeping the old size
+        
+        //free the old block:
+        mm_free(ptr); //free the current pointer's block and add it to thene linked list of free blocks
         return newptr;
     }
 }
@@ -408,12 +416,11 @@ static void *extend_heap(size_t words)
 
 /* Rounds sizes to align by DWORDs */
 static int multofeight(size_t asize) {
-    if (asize <= DSIZE) { //if size is <= 8, then return 16
-        return MIN_BLK_SIZE; 
+    if(asize <= DSIZE) {
+        return MIN_BLK_SIZE;
+    } else{
+        return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
     }
-
-    //if size > 8 then round up size to the nearest multiple of 8 
-    return (DSIZE * ((asize + (DSIZE) + (DSIZE-1)) / DSIZE));
 }
 
 /* Deleting a free block from the explicit list, updating pointers appropriately */
