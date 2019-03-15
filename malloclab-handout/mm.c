@@ -50,13 +50,16 @@ team_t team = {
 //prototypes for static functions
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
-static void find_fit(size_t asize);
+static void *find_fit(size_t asize);
 
 
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes) */
 #define DSIZE 8 /* Double word size (bytes) */
 #define CHUNKSIZE (1<<12) /* Extend heap by this amount (bytes) */
+
+/* Global Variables */
+static char *heap_listp = 0;    //points to the prologue block
 
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
@@ -106,7 +109,6 @@ static void *extend_heap(size_t words)
  */
 int mm_init(void)
 {
-    void *heap_listp = NULL;
     /* Create the initial empty heap */
     if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1)
         return -1;
@@ -241,7 +243,7 @@ void *mm_realloc(void *ptr, size_t size)
 }
 
 
-static void find_fit(size_t asize) {
+static void *find_fit(size_t asize) {
     /* First fit search */
     void *bp;
 
@@ -252,11 +254,6 @@ static void find_fit(size_t asize) {
     }
     return NULL;    /* No fit */
 }
-
-
-
-
-
 
 
 
