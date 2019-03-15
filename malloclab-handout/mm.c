@@ -326,15 +326,23 @@ void mm_free(void *bp)
 
 /* Finds where the block we want to allocate should go */
 static void *find_fit(size_t asize) {
-    /* First fit search */
-    void *bp;
+    /* Changed first fit to a next fit search */
+    char *old_rover = rover;        //make a copy of rover
 
-    for(bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
-        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
-            return bp;
+    /* Traverse the list to the end, looking for a fit */
+    while(GET_SIZE(HDRP(rover)) != 0) {         //size 0 block indicates end
+        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE(HDRP(rover)))) {  
+            return rover;
+        }
+        rover = NEXT_BLKP(rover);       //point to next rover
+    }
+    /* Traverse the first half of list [root, rover] if still haven't found a fit */
+    for(rover = freeblk_root; rover < old_rover; rover = NEXT_BLKP(rover)){
+        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE()HDRP(rover))){
+            return rover;
         }
     }
-    return NULL;    /* No fit */
+    return NULL;       //no fit found :[
 }
 
 
