@@ -195,7 +195,7 @@ void *mm_malloc(size_t size)
         return NULL;
 
     /* make sure our heap is initialized */
-    if(freeblk_root == NULL) {
+    if(heap_listp == 0) {
         mm_init();
     }
 
@@ -230,7 +230,7 @@ void *mm_realloc(void *ptr, size_t size)
     void *oldptr = ptr;
     void *newptr;
     size_t aSize;
-    size_t oldSize, newSize = size;
+    size_t oldSize;
 
     if(size == 0) {         //size == 0  case
         mm_free(ptr);
@@ -356,8 +356,8 @@ static void *find_fit(size_t asize) {
         rover = NEXT_BLKP(rover);       //point to next rover
     }
     /* Traverse the first half of list [root, rover] if still haven't found a fit */
-    for(rover = freeblk_root; rover < old_rover; rover = NEXT_BLKP(rover)){
-        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE()HDRP(rover))){
+    for(rover = heap_listp; rover < old_rover; rover = NEXT_BLKP(rover)){
+        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE(HDRP(rover)))){
             return rover;
         }
     }
