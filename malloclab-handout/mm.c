@@ -47,6 +47,11 @@ team_t team = {
 
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
+//prototypes for static functions
+static void *extend_heap(size_t words);
+static void *coalesce(void *bp);
+
+
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes) */
 #define DSIZE 8 /* Double word size (bytes) */
@@ -93,8 +98,6 @@ static void *extend_heap(size_t words)
     /* Coalesce if the previous block was free */
     return coalesce(bp);
 }
-
-
 
 
 /* 
@@ -201,12 +204,6 @@ void *mm_malloc(size_t size)
     place(bp, asize);
     return bp;
 }
-
-
-
-
-
-
 
 
 /*
