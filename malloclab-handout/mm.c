@@ -145,12 +145,17 @@ static void *coalesce(void *bp)
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
 
+    /* Added pointers for xlist */
+    void *prev_blk = PREV_BLKP(bp);
+    void *next_blk = NEXT_BLKP(bp);
+
     if (prev_alloc && next_alloc) {                 /* Case 1 */
         return bp;                                  /* Previous and next blocks both allocated */
     }
 
     else if (prev_alloc && !next_alloc) {           /* Case 2 */
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));      /* Previous block allocated, next block free */
+        delete_freeblk(next_blk);
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
     }
@@ -159,15 +164,21 @@ static void *coalesce(void *bp)
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));      /* Previous block free, next block allocated */
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        delete_freeblk(prev_blk);
         bp = PREV_BLKP(bp);
     }
 
     else {                                          /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
             GET_SIZE(FTRP(NEXT_BLKP(bp)));
+        delete_freeblk(next_blk);
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+        delete_freeblk(prev_blk);                   //remember to delete both prev and next in case 4
         bp = PREV_BLKP(bp);
+    }
+    if((rover > (char *)bp && rover < NEXT_BLKP(bp))){      //optimization, just updated our old_rover
+        rover = bp;
     }
     return bp;
 }
