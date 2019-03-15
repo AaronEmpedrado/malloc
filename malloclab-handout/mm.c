@@ -64,6 +64,10 @@ static char *heap_listp = 0;    //points to the prologue block
 #define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
 #define MIN_BLK_SIZE 2*DSIZE  /* For implicit free list, using header and footer (nonzero payload) */        
 
+/* Macros for offset from bp (pointer to payload) */
+#define NEXT_OFFSET WSIZE
+#define PREV_OFFSET 0
+
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
 /* Pack a size and allocated bit into a word */
@@ -84,6 +88,17 @@ static char *heap_listp = 0;    //points to the prologue block
 /* Given block ptr bp, compute address of next and previous blocks */
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))     //((char *)(bp) - WSIZE)) points to header
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))     //((char *)(bp) - DSIZE)) points to footer of prev block
+
+/* Explicit List macros */
+/* Get ptr to next or prev free block in explicit list */
+#define GET_NEXT_FREE(bp) (GET(bp + NEXT_OFFSET))
+#define GET_PREV_FREE(bp) (GET(bp + PREV_OFFSET))
+
+/* Macros to update pointers */
+
+
+
+
 
 /* Prototypes for helper functions */
 static int multofeight(size_t asize);
