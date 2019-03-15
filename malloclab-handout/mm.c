@@ -56,7 +56,7 @@ static void place(void *bp, size_t asize);
 static int mm_check(void);
 
 /* Global Variables */
-static char *heap_listp = (char *)(mem_heap_lo());    //points to the prologue block
+static char *heap_listp = 0;    //points to the prologue block
 
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
