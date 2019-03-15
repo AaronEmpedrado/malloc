@@ -312,11 +312,13 @@ void *mm_realloc(void *ptr, size_t size)
  */
 void mm_free(void *bp)
 {
-    size_t size = GET_SIZE(HDRP(bp));
+    /* check if bp is a valid ptr */
+    if(bp == NULL) {
+        return;
+    }
 
-    PUT(HDRP(bp), PACK(size, 0));       //free header
-    PUT(FTRP(bp), PACK(size, 0));       //free footer
     coalesce(bp);                       //coalesce if contiguous free blocks
+    addfreeblock(bp);                   //add to explicit free list
 }
 
 /*
