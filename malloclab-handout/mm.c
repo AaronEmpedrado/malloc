@@ -217,7 +217,7 @@ void *mm_realloc(void *ptr, size_t size)
 
     if(size == 0) {         //size == 0  case
         mm_free(ptr);
-        return NULL;
+        return freeblk_root;    //or should it be NULL?
     }
 
     // newptr = mm_malloc(size);
@@ -252,7 +252,7 @@ void *mm_realloc(void *ptr, size_t size)
         /* Previous Allocated, Next is free */
         if(!nextalloc) {
             mergeSize += nextptr_size;
-            //removefreeblock
+            delete_freeblk(nextptr);
         }
         /* Check if we need to re-align */
         if(mergeSize >= aSize) {
@@ -268,7 +268,7 @@ void *mm_realloc(void *ptr, size_t size)
                 PUT(HDRP(nextptr), PACK(mergeSize - aSize, 0));
                 PUT(FTRP(nextptr), PACK(mergeSize - aSize, 0));
 
-                //addfreeblock
+                addfreeblock(nextptr);
             }
             return ptr;
         }
@@ -277,13 +277,13 @@ void *mm_realloc(void *ptr, size_t size)
         /* Previous free, next is free */
         if(!nextalloc) {
             mergeSize += prevptr_size + nextptr_size;
-            //removefreeblock
+            delete_freeblk(nextptr);
         } else {    /* Previous free, next allocated */
             mergeSize += prevptr_size;
         }
 
         if(mergeSize >= aSize) {
-            //removefreeblock(prevptr)
+            delete_freeblk(prevptr);
             memcpy(prevptr, ptr, (oldSize - DSIZE));
 
             if((mergeSize - aSize) < MIN_BLK_SIZE) {
@@ -295,7 +295,7 @@ void *mm_realloc(void *ptr, size_t size)
 
                 PUT(HDRP(ptr), PACK(mergeSize - aSize, 0));
                 PUT(FTRP(ptr), PACK(mergeSize - aSize, 0));
-                //addfreeblock
+                addfreeblock(ptr);
             }
             return  prevptr;
         }
