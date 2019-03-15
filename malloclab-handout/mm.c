@@ -53,14 +53,13 @@ static void *coalesce(void *bp);
 static void *find_fit(size_t asize);
 static void place(void *bp, size_t asize);
 
-
-/* Basic constants and macros that I added */
-#define WSIZE 4 /* Word and header/footer size (bytes) */
-#define DSIZE 8 /* Double word size (bytes) */
-#define CHUNKSIZE (1<<12) /* Extend heap by this amount (bytes) */
-
 /* Global Variables */
 static char *heap_listp = 0;    //points to the prologue block
+
+/* Basic constants and macros that I added */
+#define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
+#define DSIZE 8 /* Double word size (bytes) */
+#define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
 
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
@@ -72,37 +71,16 @@ static char *heap_listp = 0;    //points to the prologue block
 #define PUT(p, val) (*(unsigned int *)(p) = (val))
 
 /* Read the size and allocated fields from address p */
-#define GET_SIZE(p) (GET(p) & ~0x7)
-#define GET_ALLOC(p) (GET(p) & 0x1)
+#define GET_SIZE(p) (GET(p) & ~0x7)     //zero out last 3 bits (only consider size)
+#define GET_ALLOC(p) (GET(p) & 0x1)     //obtain last bit (allocated or not)
 
 /* Given block ptr bp, compute address of its header and footer */
 #define HDRP(bp) ((char *)(bp) - WSIZE)
 #define FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 /* Given block ptr bp, compute address of next and previous blocks */
-#define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))
-#define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))
-
-
-//Added for implicit list
-static void *extend_heap(size_t words)
-{
-    char *bp;
-    size_t size;
-
-    /* Allocate an even number of words to maintain alignment */
-    size = (words % 2) ? (words+1) * WSIZE : words * WSIZE;
-    if ((long)(bp = mem_sbrk(size)) == -1)
-        return NULL;
-
-    /* Initialize free block header/footer and the epilogue header */
-    PUT(HDRP(bp), PACK(size, 0)); /* Free block header */
-    PUT(FTRP(bp), PACK(size, 0)); /* Free block footer */
-    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); /* New epilogue header */
-
-    /* Coalesce if the previous block was free */
-    return coalesce(bp);
-}
+#define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))     //((char *)(bp) - WSIZE)) points to header
+#define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))     //((char *)(bp) - DSIZE)) points to footer of prev block
 
 
 /* 
@@ -121,8 +99,8 @@ int mm_init(void)
 
     /* Extend the empty heap with a free block of CHUNKSIZE bytes */
     if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
-        return -1;
-    return 0;
+        return -1;              //if any error occurred
+    return 0;                   //if we're all good
 }
 
 
@@ -159,8 +137,6 @@ static void *coalesce(void *bp)
     }
     return bp;
 }
-
-
 
 
 /* 
@@ -273,3 +249,23 @@ static void place(void *bp, size_t asize) {
     }
 }
 
+
+/* Extends the heap by the CHUNKSIZE */
+static void *extend_heap(size_t words)
+{
+    char *bp;
+    size_t size;
+
+    /* Allocate an even number of words to maintain alignment */
+    size = (words % 2) ? (words+1) * WSIZE : words * WSIZE;
+    if ((long)(bp = mem_sbrk(size)) == -1)
+        return NULL;
+
+    /* Initialize free block header/footer and the epilogue header */
+    PUT(HDRP(bp), PACK(size, 0)); /* Free block header */
+    PUT(FTRP(bp), PACK(size, 0)); /* Free block footer */
+    PUT(HDRP(NEXT_BLKP(bp)), PACK(0, 1)); /* New epilogue header */
+
+    /* Coalesce if the previous block was free */
+    return coalesce(bp);
+}

@@ -34,14 +34,6 @@ void mem_init(void)
     mem_brk = mem_start_brk;                  /* heap is empty initially */
 }
 
-// //New mem_init
-// void mem_init(void) {
-//     mem_start_brk = (char *)Malloc(MAX_HEAP);
-//     mem_brk = (char *)mem_start_brk;
-//     mem_max_addr = (char *)(mem_start_brk + MAX_HEAP);
-// }
-
-
 /* 
  * mem_deinit - free the storage used by the memory system model
  */
