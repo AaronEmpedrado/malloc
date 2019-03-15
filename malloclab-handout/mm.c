@@ -150,14 +150,16 @@ static void *coalesce(void *bp)
     void *next_blk = NEXT_BLKP(bp);
 
     if (prev_alloc && next_alloc) {                 /* Case 1 */
+        PUT(HDRP(bp), PACK(size, 0));   //update the tags
+        PUT(FTRP(bp), PACK(size, 0));
         return bp;                                  /* Previous and next blocks both allocated */
     }
 
     else if (prev_alloc && !next_alloc) {           /* Case 2 */
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));      /* Previous block allocated, next block free */
-        delete_freeblk(next_blk);
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
+        delete_freeblk(next_blk);
     }
 
     else if (!prev_alloc && next_alloc) {           /* Case 3 */
@@ -165,15 +167,15 @@ static void *coalesce(void *bp)
         PUT(FTRP(bp), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         delete_freeblk(prev_blk);
-        bp = PREV_BLKP(bp);
+        bp = prev_blk;
     }
 
     else {                                          /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
             GET_SIZE(FTRP(NEXT_BLKP(bp)));
-        delete_freeblk(next_blk);
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+        delete_freeblk(next_blk);
         delete_freeblk(prev_blk);                   //remember to delete both prev and next in case 4
         bp = PREV_BLKP(bp);
     }
@@ -229,6 +231,7 @@ void *mm_realloc(void *ptr, size_t size)
 {
     void *oldptr = ptr;
     void *newptr;
+    void *retptr;
     size_t aSize;
     size_t oldSize;
 
@@ -271,24 +274,7 @@ void *mm_realloc(void *ptr, size_t size)
             mergeSize += nextptr_size;
             delete_freeblk(nextptr);
         }
-        /* Check if we need to re-align */
-        if(mergeSize >= aSize) {
-            /* Do we need to realign? */
-            if((mergeSize - aSize) < MIN_BLK_SIZE) {
-                PUT(HDRP(ptr), PACK(mergeSize, 1));     //update tags
-                PUT(FTRP(ptr), PACK(mergeSize, 1));
-            } else {
-                PUT(HDRP(ptr), PACK(aSize, 1));
-                PUT(FTRP(ptr), PACK(aSize, 1));
-
-                /* Now free the next */
-                PUT(HDRP(nextptr), PACK(mergeSize - aSize, 0));
-                PUT(FTRP(nextptr), PACK(mergeSize - aSize, 0));
-
-                add_freeblk(nextptr);
-            }
-            return ptr;
-        }
+        retptr = ptr;
     } else {  /* Case where previous block was free */
         /* Update mergeSize */
         /* Previous free, next is free */
@@ -299,28 +285,36 @@ void *mm_realloc(void *ptr, size_t size)
             mergeSize += prevptr_size;
         }
 
+        retptr = prevptr;
+
         if(mergeSize >= aSize) {
             delete_freeblk(prevptr);
             memcpy(prevptr, ptr, (oldSize - DSIZE));
-
-            if((mergeSize - aSize) < MIN_BLK_SIZE) {
-                PUT(HDRP(prevptr), PACK(mergeSize, 1));
-                PUT(FTRP(prevptr), PACK(mergeSize, 1));
-            } else {
-                PUT(HDRP(prevptr), PACK(aSize, 1));
-                PUT(FTRP(prevptr), PACK(aSize, 1));
-
-                PUT(HDRP(ptr), PACK(mergeSize - aSize, 0));
-                PUT(FTRP(ptr), PACK(mergeSize - aSize, 0));
-                add_freeblk(ptr);
-            }
-            return  prevptr;
         }
     }
-    newptr = mm_malloc(size);
-    memcpy(newptr, ptr, oldSize);
-    mm_free(ptr);
-    return newptr;
+    
+    /* Check if we need to re-align */
+    if(mergeSize >= aSize) {
+        /* Do we need to realign? */
+        if((mergeSize - aSize) < MIN_BLK_SIZE) {
+            PUT(HDRP(retptr), PACK(mergeSize, 1));
+            PUT(FTRP(retptr), PACK(mergeSize, 1));
+        } else {
+            PUT(HDRP(retptr), PACK(aSize, 1));
+            PUT(FTRP(retptr), PACK(aSize, 1));
+
+            PUT(HDRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
+            PUT(FTRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
+            add_freeblk(NEXT_BLKP(retptr));
+        }
+        return  prevptr;
+    } else {
+        newptr = mm_malloc(size);
+        memcpy(newptr, ptr, oldSize);
+
+        mm_free(ptr);
+        return newptr;
+    }
 }
 
 
@@ -417,8 +411,8 @@ static int multofeight(size_t asize) {
 
 /* Deleting a free block from the explicit list, updating pointers appropriately */
 static void delete_freeblk(void *bp) {
-    void *prev_blk = (void *)(GET_PREV_FREE(bp));
-    void *next_blk = (void *)(GET_NEXT_FREE(bp));
+    void *prev_blk = (void *)GET_PREV_FREE(bp);
+    void *next_blk = (void *)GET_NEXT_FREE(bp);
 
     /* check for edge case => are we root? */
     if(bp == (void *)freeblk_root) {
