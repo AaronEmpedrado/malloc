@@ -324,12 +324,17 @@ void *mm_realloc(void *ptr, size_t size)
 void mm_free(void *bp)
 {
     /* check if bp is a valid ptr */
-    if(bp == NULL) {
+    if(bp == 0) {
         return;
     }
 
-    coalesce(bp);                       //coalesce if contiguous free blocks
-    add_freeblk(bp);                   //add to explicit free list
+    /* Check that we have initialized the heap */
+    if(heap_listp == 0) {
+        mm_init();
+    }
+
+    void *ptr = coalesce(bp);                       //coalesce if contiguous free blocks
+    add_freeblk(ptr);                   //add to explicit free list
 }
 
 /*
@@ -362,11 +367,11 @@ static void *find_fit(size_t asize) {
 /* Function to actually place the allocated block */
 static void place(void *bp, size_t asize) {
     size_t csize = GET_SIZE(HDRP(bp));
-    delete_freeblk(bp);
     
     if ((csize - asize) >= MIN_BLK_SIZE) {         /* Splits only if remainder is at least minimum block size */
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
+        delete_freeblk(bp);
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize-asize, 0));
         PUT(FTRP(bp), PACK(csize-asize, 0));
@@ -376,6 +381,7 @@ static void place(void *bp, size_t asize) {
     else {                                     /* Remainder not enough for another free => have unused bytes */
         PUT(HDRP(bp), PACK(csize, 1));
         PUT(FTRP(bp), PACK(csize, 1));
+        delete_freeblk(bp);
     }
 }
 
