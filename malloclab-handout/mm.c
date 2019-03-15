@@ -147,23 +147,6 @@ static void *coalesce(void *bp)
 }
 
 
-/* 
- * mm_malloc - Allocate a block by incrementing the brk pointer.
- *     Always allocate a block whose size is a multiple of the alignment.
- */
-// void *mm_malloc(size_t size)
-// {
-//     int newsize = ALIGN(size + SIZE_T_SIZE);
-//     void *p = mem_sbrk(newsize);
-//     if (p == (void *)-1)
-// 	return NULL;
-//     else {
-//         *(size_t *)p = size;
-//         return (void *)((char *)p + SIZE_T_SIZE);
-//     }
-// }
-
-
 void *mm_malloc(size_t size)
 {
     size_t asize; /* Adjusted block size */
@@ -251,14 +234,14 @@ static void *find_fit(size_t asize) {
 static void place(void *bp, size_t asize) {
     size_t csize = GET_SIZE(HDRP(bp));
     
-    if ((csize - asize) >= (2*DSIZE)) {
+    if ((csize - asize) >= (2*DSIZE)) {         /* Splits only if remainder is at least minimum block size */
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
         bp = NEXT_BLKP(bp);
         PUT(HDRP(bp), PACK(csize-asize, 0));
         PUT(FTRP(bp), PACK(csize-asize, 0));
     }
-    else {
+    else {                                     /* Remainder not enough for another free => have unused bytes */
         PUT(HDRP(bp), PACK(csize, 1));
         PUT(FTRP(bp), PACK(csize, 1));
     }
