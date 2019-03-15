@@ -215,7 +215,7 @@ void *mm_malloc(size_t size)
     extendsize = MAX(asize,CHUNKSIZE);
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
-    addfreeblock(bp);
+    add_freeblk(bp);
     place(bp, asize);
     return bp;
 }
@@ -285,7 +285,7 @@ void *mm_realloc(void *ptr, size_t size)
                 PUT(HDRP(nextptr), PACK(mergeSize - aSize, 0));
                 PUT(FTRP(nextptr), PACK(mergeSize - aSize, 0));
 
-                addfreeblock(nextptr);
+                add_freeblk(nextptr);
             }
             return ptr;
         }
@@ -312,7 +312,7 @@ void *mm_realloc(void *ptr, size_t size)
 
                 PUT(HDRP(ptr), PACK(mergeSize - aSize, 0));
                 PUT(FTRP(ptr), PACK(mergeSize - aSize, 0));
-                addfreeblock(ptr);
+                add_freeblk(ptr);
             }
             return  prevptr;
         }
@@ -335,7 +335,7 @@ void mm_free(void *bp)
     }
 
     coalesce(bp);                       //coalesce if contiguous free blocks
-    addfreeblock(bp);                   //add to explicit free list
+    add_freeblk(bp);                   //add to explicit free list
 }
 
 /*
@@ -377,7 +377,7 @@ static void place(void *bp, size_t asize) {
         PUT(HDRP(bp), PACK(csize-asize, 0));
         PUT(FTRP(bp), PACK(csize-asize, 0));
 
-        addfreeblock(bp);
+        add_freeblk(bp);
     }
     else {                                     /* Remainder not enough for another free => have unused bytes */
         PUT(HDRP(bp), PACK(csize, 1));
