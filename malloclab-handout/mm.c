@@ -183,6 +183,11 @@ void *mm_malloc(size_t size)
     if (size == 0)
         return NULL;
 
+    /* make sure our heap is initialized */
+    if(freeblk_root == NULL) {
+        mm_init();
+    }
+
     /* Adjust block size to include overhead and alignment reqs. */
     if (size <= DSIZE)
         asize = 2*DSIZE;
@@ -199,6 +204,7 @@ void *mm_malloc(size_t size)
     extendsize = MAX(asize,CHUNKSIZE);
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
+    addfreeblock(bp);
     place(bp, asize);
     return bp;
 }
