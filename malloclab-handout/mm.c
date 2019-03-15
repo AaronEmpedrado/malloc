@@ -57,6 +57,9 @@ static int mm_check(void);
 
 /* Global Variables */
 static char *heap_listp = 0;    //points to the prologue block
+static char *freeblk_root = NULL;   //points to the first block of the explicit list
+static char *rover;                 //for next fit implementation
+
 
 /* Basic constants and macros */
 #define WSIZE 4     /* Word and header/footer size (bytes)  => 32 bit system */
@@ -121,10 +124,17 @@ int mm_init(void)
     PUT(heap_listp + (3*WSIZE), PACK(0, 1)); /* Epilogue header */
     heap_listp += (2*WSIZE);
 
+    rover = heap_listp; //initialize the rover to first block
+
     /* Extend the empty heap with a free block of CHUNKSIZE bytes */
-    if (extend_heap(CHUNKSIZE/WSIZE) == NULL)
+    void *new_blkp = extend_heap(CHUNKSIZE/WSIZE);
+    if (new_blkp == NULL)
         return -1;              //if any error occurred
-    return 0;                   //if we're all good
+    freeblk_root = new_blkp;
+    /* Initialize pointers */
+    SET_NEXT_PTR(freeblk_root, NULL);
+    SET_PREV_PTR(freeblk_root, NULL);
+    return 0;                   //we're all good
 }
 
 
@@ -373,6 +383,17 @@ static int multofeight(size_t asize) {
     } else{
         return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
     }
+}
+
+/*  */
+static void delete_freeblk(void *bp) {
+    void *prev_blk = (void *)(GET_PREV_FREE(bp));
+    void *next_blk = (void *)(GET_NEXT_FREE(bp));
+}
+
+
+static void add_freeblk(void *bp) {
+    //
 }
 
 
