@@ -385,7 +385,7 @@ static int multofeight(size_t asize) {
     }
 }
 
-/*  */
+/* Deleting a free block from the explicit list, updating pointers appropriately */
 static void delete_freeblk(void *bp) {
     void *prev_blk = (void *)(GET_PREV_FREE(bp));
     void *next_blk = (void *)(GET_NEXT_FREE(bp));
@@ -405,8 +405,16 @@ static void delete_freeblk(void *bp) {
 }
 
 
+/* Adding a free block to the front of explicit list, updating pointers appropriately */
 static void add_freeblk(void *bp) {
-    //
+    //Initialize new block's pointers
+    SET_PREV_PTR(bp, NULL);     
+    SET_NEXT_PTR(bp, freeblk_root);
+    //Update Root
+    if(freeblk_root != NULL) {
+        SET_PREV_PTR(freeblk_root, bp);     //link root blk to bp
+    }
+    freeblk_root = (char *)bp;              //update the addition as the new root
 }
 
 
