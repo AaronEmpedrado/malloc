@@ -95,13 +95,14 @@ static char *heap_listp = 0;    //points to the prologue block
 #define GET_PREV_FREE(bp) (GET(bp + PREV_OFFSET))
 
 /* Macros to update pointers */
-
-
-
+#define SET_NEXT_PTR(bp, newptr) (PUT(bp + NEXT_OFFSET, newptr))
+#define SET_PREV_PTR(bp, newptr) (PUT(bp + PREV_OFFSET, newptr))
 
 
 /* Prototypes for helper functions */
 static int multofeight(size_t asize);
+static void delete_freeblk(void *bp);
+static void add_freeblk(void *bp);
 
 /* Prototypes for heap checker helper functions */
 static int check_invariant(void);
