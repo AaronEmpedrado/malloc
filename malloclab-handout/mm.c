@@ -61,7 +61,7 @@ static char *heap_listp = 0;    //points to the prologue block
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
 #define DSIZE 8 /* Double word size (bytes) */
-#define CHUNKSIZE (1<<16) /* Extend heap by this amount (4096 bytes) */
+#define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
 
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
