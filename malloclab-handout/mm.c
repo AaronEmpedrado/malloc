@@ -283,6 +283,11 @@ int mm_check(void) {
      //do the pointers in the free list point to valid free blocks?
      //do any allocated blocks overlap?
      //do the pointers in a heap block point to valid heap addresses?
+
+    //check invariants
+        //prologue block is 8byte allocated
+        //epilogue block is 0 byte allocated
+
      * 
      * write subroutines for each check and call in here
      * have them return 0 if they're good and keep adding the values
