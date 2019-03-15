@@ -215,7 +215,7 @@ void *mm_malloc(size_t size)
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL) //if we can't expand the heap anymore, return NULL
         return NULL;
     
-    add_fblock(bp); //add the heap extension to the linked list of freed blocks
+    add_freeblk(bp); //add the heap extension to the linked list of freed blocks
 
     place(bp, asize);
     return bp;
