@@ -302,11 +302,11 @@ static int mm_check(void) {
 
 
 /* Check invariant of the prologue and epilogue blocks */
-static int check_invariant(void){
-    /* Check the prologue block is 8 byte allocated */
+/*static int check_invariant(void){
+     // Check the prologue block is 8 byte allocated 
     if(mem_heap_lo + )
 }
-
+*/
 
 
 
