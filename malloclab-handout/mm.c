@@ -308,13 +308,15 @@ static int check_invariant(void){
     char *PRO_HDRP = HDRP(PRO_BLKP);
     char *PRO_FTRP = FTRP(PRO_BLKP);
     char *EPI_BLPK = mem_heap_hi();
-    
+
     //Check the prologue block's invariance
     if(!(GET_SIZE(PRO_HDRP) == 8 && GET_ALLOC(PRO_HDRP) == 1 &&
          GET_SIZE(PRO_FTRP) == 8 && GET_ALLOC(PRO_FTRP) == 1)) {
+        printf("Prologue invariant failed.");
         return 1;       //error
     }   //Check the epilogue invariance 
     else if(GET_SIZE(EPI_BLPK) == 0 && GET_ALLOC(EPI_BLPK) == 1) {
+        printf("Epilogue invariant failed.");
         return 1;       //error
     }
     //Both invariants pass
