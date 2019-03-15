@@ -408,12 +408,12 @@ static void *extend_heap(size_t words)
 
 /* Rounds sizes to align by DWORDs */
 static int multofeight(size_t asize) {
-    if (size <= DSIZE) { //if size is <= 8, then return 16
+    if (asize <= DSIZE) { //if size is <= 8, then return 16
         return MIN; 
     }
 
     //if size > 8 then round up size to the nearest multiple of 8 
-    return (DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE));
+    return (DSIZE * ((asize + (DSIZE) + (DSIZE-1)) / DSIZE));
 }
 
 /* Deleting a free block from the explicit list, updating pointers appropriately */
