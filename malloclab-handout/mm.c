@@ -53,18 +53,20 @@ static void *coalesce(void *bp);
 static void *find_fit(size_t asize);
 static void place(void *bp, size_t asize);
 
+static int mm_check(void);
+
 /* Global Variables */
 static char *heap_listp = 0;    //points to the prologue block
 
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
 #define DSIZE 8 /* Double word size (bytes) */
-#define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
+#define CHUNKSIZE (1<<16) /* Extend heap by this amount (4096 bytes) */
 
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
 /* Pack a size and allocated bit into a word */
-#define PACK(size, alloc) ((size) | (alloc))
+#define PACK(size, alloc) ((size) | (alloc))        //basically initializes a header or footer
 
 /* Read and write a word at address p */
 #define GET(p) (*(unsigned int *)(p))
@@ -194,9 +196,9 @@ void mm_free(void *bp)
 {
     size_t size = GET_SIZE(HDRP(bp));
 
-    PUT(HDRP(bp), PACK(size, 0));
-    PUT(FTRP(bp), PACK(size, 0));
-    coalesce(bp);
+    PUT(HDRP(bp), PACK(size, 0));       //free header
+    PUT(FTRP(bp), PACK(size, 0));       //free footer
+    coalesce(bp);                       //coalesce if contiguous free blocks
 }
 
 /*
@@ -269,3 +271,30 @@ static void *extend_heap(size_t words)
     /* Coalesce if the previous block was free */
     return coalesce(bp);
 }
+
+
+/* Heap Checker */
+int mm_check(void) {
+    /*
+     * Implement this
+     //is every block in the free list marked as free?
+     //are there any contiguous free blocks that somehow escaped coalescing?
+     //is every free block actually in the free list?
+     //do the pointers in the free list point to valid free blocks?
+     //do any allocated blocks overlap?
+     //do the pointers in a heap block point to valid heap addresses?
+     * 
+     * write subroutines for each check and call in here
+     * have them return 0 if they're good and keep adding the values
+     * if our sum ends up being 0, return the invert of that (nonzero means we good)
+     */
+}
+
+
+
+
+
+
+
+
+
