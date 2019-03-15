@@ -64,7 +64,7 @@ static char *rover;                 //for next fit implementation
 /* Basic constants and macros */
 #define WSIZE 4     /* Word and header/footer size (bytes)  => 32 bit system */
 #define DSIZE 8     /* Double word size (bytes) */
-#define CHUNKSIZE (1<<16) /* Extend heap by this amount (4096 bytes) */
+#define CHUNKSIZE (1<<14) /* Extend heap by this amount (4096 bytes) */
 #define MIN_BLK_SIZE 2*DSIZE  /* For implicit free list, using header and footer (nonzero payload) */        
 
 /* Macros for offset from bp (pointer to payload) */
