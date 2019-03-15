@@ -56,7 +56,7 @@ static void place(void *bp, size_t asize);
 static int mm_check(void);
 
 /* Global Variables */
-static char *heap_listp = 0;    //points to the prologue block
+static char *heap_listp = (unsigned int *)(mem_heap_lo());    //points to the prologue block
 
 /* Basic constants and macros that I added */
 #define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
@@ -84,6 +84,10 @@ static char *heap_listp = 0;    //points to the prologue block
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))     //((char *)(bp) - WSIZE)) points to header
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))     //((char *)(bp) - DSIZE)) points to footer of prev block
 
+/* Pointers to Prologue and Epilogue Blocks */
+// #define PRO_HDRP 
+// #define PRO_FTRP
+// #define EPI_BLPK
 
 /* 
  * mm_init - initialize the malloc package.
@@ -274,7 +278,7 @@ static void *extend_heap(size_t words)
 
 
 /* Heap Checker */
-int mm_check(void) {
+static int mm_check(void) {
     /*
      * Implement this
      //is every block in the free list marked as free?
@@ -297,7 +301,11 @@ int mm_check(void) {
 
 
 
-
+/* Check invariant of the prologue and epilogue blocks */
+static int check_invariant(void){
+    /* Check the prologue block is 8 byte allocated */
+    if(mem_heap_lo + )
+}
 
 
 
