@@ -89,7 +89,7 @@ static char *heap_listp = 0;    //points to the prologue block
 static int multofeight(size_t asize);
 
 /* Prototypes for heap checker helper functions */
-static int check_invariant(void)
+static int check_invariant(void);
 
 /* 
  * mm_init - initialize the malloc package.
