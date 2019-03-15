@@ -188,36 +188,35 @@ static void *coalesce(void *bp)
 
 void *mm_malloc(size_t size)
 {
-    size_t asize; /* Adjusted block size */
+    size_t asize;      /* Adjusted block size */
     size_t extendsize; /* Amount to extend heap if no fit */
-    char *bp;
+    char *bp;      
+
+    if (heap_listp == 0){ // if the heap has not been initialized, initialize it
+        mm_init();
+    }
 
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
-
-    /* make sure our heap is initialized */
-    if(heap_listp == 0) {
-        mm_init();
-    }
-
+    
     /* Adjust block size to include overhead and alignment reqs. */
-    if (size <= DSIZE)
-        asize = 2*DSIZE;
-    else
-        asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
+    asize = multofeight(size); // get the adjusted block size (rounds up the given size to a multiple of 8)
+    // 
 
     /* Search the free list for a fit */
-    if ((bp = find_fit(asize)) != NULL) {
-        place(bp, asize);
+    if ((bp = find_fit(asize)) != NULL) {  //if there's a block that can fit the data then place the data in the block, update the header and footer of the block, potentially split the block, and return the block pointer 
+        place(bp, asize);                  
         return bp;
     }
 
     /* No fit found. Get more memory and place the block */
-    extendsize = MAX(asize,CHUNKSIZE);
-    if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
+    extendsize = MAX(asize,CHUNKSIZE); //need to make more space 
+    if ((bp = extend_heap(extendsize/WSIZE)) == NULL) //if we can't expand the heap anymore, return NULL
         return NULL;
-    add_freeblk(bp);
+    
+    add_fblock(bp); //add the heap extension to the linked list of freed blocks
+
     place(bp, asize);
     return bp;
 }
