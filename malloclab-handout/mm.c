@@ -179,6 +179,34 @@ void *mm_malloc(size_t size)
 
 
 /*
+ * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
+ */
+void *mm_realloc(void *ptr, size_t size)
+{
+    void *oldptr = ptr;
+    void *newptr;
+    size_t copySize;
+    
+    if(size == 0) {         //size == 0  case
+        mm_free(ptr);
+    }
+
+    newptr = mm_malloc(size);
+    if (newptr == NULL)     
+        return NULL;
+    if(oldptr == NULL){     //ptr is null case
+        return mm_malloc(size);
+    }
+    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
+    if (size < copySize)
+      copySize = size;
+    memcpy(newptr, oldptr, copySize);
+    mm_free(oldptr);
+    return newptr;
+}
+
+
+/*
  * mm_free - Freeing a block does nothing.
  */
 void mm_free(void *bp)
@@ -189,27 +217,6 @@ void mm_free(void *bp)
     PUT(FTRP(bp), PACK(size, 0));       //free footer
     coalesce(bp);                       //coalesce if contiguous free blocks
 }
-
-/*
- * mm_realloc - Implemented simply in terms of mm_malloc and mm_free
- */
-void *mm_realloc(void *ptr, size_t size)
-{
-    void *oldptr = ptr;
-    void *newptr;
-    size_t copySize;
-    
-    newptr = mm_malloc(size);
-    if (newptr == NULL)
-      return NULL;
-    copySize = *(size_t *)((char *)oldptr - SIZE_T_SIZE);
-    if (size < copySize)
-      copySize = size;
-    memcpy(newptr, oldptr, copySize);
-    mm_free(oldptr);
-    return newptr;
-}
-
 
 /*
  * Helper functions 
