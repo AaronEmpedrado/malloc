@@ -265,7 +265,7 @@ void *mm_realloc(void *ptr, size_t size)
 
         if(!nextalloc) {  // if the next block is not allocated/free
             new_size = old_size + next_ptr_size; // combine the sizes of current & next 
-            rem_fblock(next_ptr); // take the next block out of the linked list of free blocks
+            delete_freeblk(next_ptr); // take the next block out of the linked list of free blocks
         }
         
         pointer = ptr; // set the pointer returned to the pointer provided
