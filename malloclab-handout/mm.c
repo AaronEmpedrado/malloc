@@ -50,6 +50,7 @@ team_t team = {
 //prototypes for static functions
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
+static void find_fit(size_t asize);
 
 
 /* Basic constants and macros that I added */
@@ -105,6 +106,7 @@ static void *extend_heap(size_t words)
  */
 int mm_init(void)
 {
+    void *heap_listp = NULL;
     /* Create the initial empty heap */
     if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1)
         return -1;
@@ -239,7 +241,17 @@ void *mm_realloc(void *ptr, size_t size)
 }
 
 
+static void find_fit(size_t asize) {
+    /* First fit search */
+    void *bp;
 
+    for(bp = heap_listp; GET_SIZE(HDRP(bp)) > 0; bp = NEXT_BLKP(bp)) {
+        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {
+            return bp;
+        }
+    }
+    return NULL;    /* No fit */
+}
 
 
 
