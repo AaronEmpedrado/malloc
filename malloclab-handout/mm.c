@@ -58,10 +58,11 @@ static int mm_check(void);
 /* Global Variables */
 static char *heap_listp = 0;    //points to the prologue block
 
-/* Basic constants and macros that I added */
-#define WSIZE 4 /* Word and header/footer size (bytes)  => 32 bit system */
-#define DSIZE 8 /* Double word size (bytes) */
+/* Basic constants and macros */
+#define WSIZE 4     /* Word and header/footer size (bytes)  => 32 bit system */
+#define DSIZE 8     /* Double word size (bytes) */
 #define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
+#define MIN_BLK_SIZE 2*DSIZE  /* For implicit free list, using header and footer (nonzero payload) */        
 
 #define MAX(x, y) ((x) > (y)? (x) : (y))
 
@@ -84,10 +85,9 @@ static char *heap_listp = 0;    //points to the prologue block
 #define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))     //((char *)(bp) - WSIZE)) points to header
 #define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))     //((char *)(bp) - DSIZE)) points to footer of prev block
 
-/* Pointers to Prologue and Epilogue Blocks */
-// #define PRO_HDRP 
-// #define PRO_FTRP
-// #define EPI_BLPK
+/* Prototypes for helper functions */
+static int multofeight(size_t asize);
+
 
 /* 
  * mm_init - initialize the malloc package.
@@ -299,7 +299,9 @@ static void *extend_heap(size_t words)
      */
 //}
 
-
+/*
+ * Helper functions for the heap checker
+ */
 
 /* Check invariant of the prologue and epilogue blocks */
 static int check_invariant(void){
@@ -324,6 +326,13 @@ static int check_invariant(void){
 }
 
 
-
+/* Rounds sizes to align by DWORDs */
+static int multofeight(size_t asize) {
+    if(asize <= DSIZE) {
+        return MIN_BLK_SIZE;
+    } else{
+        return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
+    }
+}
 
 
