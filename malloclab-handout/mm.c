@@ -359,7 +359,7 @@ static void *find_fit(size_t asize) {
 static void place(void *bp, size_t asize) {
     size_t csize = GET_SIZE(HDRP(bp));
     
-    if ((csize - asize) >= MIN_BLK_SIZE) {         /* Splits only if remainder is at least minimum block size */
+    if ((csize - asize) >= (4*WSIZE)) {         /* Splits only if remainder is at least minimum block size */
         PUT(HDRP(bp), PACK(asize, 1));
         PUT(FTRP(bp), PACK(asize, 1));
         delete_freeblk(bp);
@@ -367,7 +367,7 @@ static void place(void *bp, size_t asize) {
         PUT(HDRP(bp), PACK(csize-asize, 0));
         PUT(FTRP(bp), PACK(csize-asize, 0));
 
-        add_freeblk(bp);
+        insertAtRoot(bp);
     }
     else {                                     /* Remainder not enough for another free => have unused bytes */
         PUT(HDRP(bp), PACK(csize, 1));
