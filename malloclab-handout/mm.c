@@ -110,7 +110,7 @@ static void insertAtRoot(void *bp);
 
 /* Prototypes for heap checker helper functions */
 static int check_invariant(void);
-static void printBLK(void *bp);
+static void scopeBLK(void *bp);
 static void checkBLK(void *bp);
 
 
@@ -414,8 +414,8 @@ static int mm_check(void) {
 
     /* Scope through and check each block */
     while(temp){
-        scopeBLK();
-        checkBLK();
+        scopeBLK(temp);
+        checkBLK(temp);
     }
 
     return sum;
