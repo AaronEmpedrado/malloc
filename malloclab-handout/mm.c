@@ -166,16 +166,16 @@ static void *coalesce(void *bp)
     else if (!prev_alloc && next_alloc) {           /* Case 3 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));      /* Previous block free, next block allocated */
         delete_freeblk(PREV_BLKP(bp));
-        PUT(FTRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        PUT(FTRP(PREV_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
     }
 
-    else {                                          /* Case 4 */
+    else if(!prev_alloc && !next_alloc) {                                          /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
                 GET_SIZE(HDRP(NEXT_BLKP(bp)));
-        delete_freeblk(NEXT_BLKP(bp));
         delete_freeblk(PREV_BLKP(bp));                   //remember to delete both prev and next in case 4
+        delete_freeblk(NEXT_BLKP(bp));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
