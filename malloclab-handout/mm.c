@@ -488,6 +488,6 @@ static void scopeBLK(void *bp) {
  *checkBLK is a checker to see if our block is consistent   
  */
 static void checkBLK(void *bp){
-
+    return;
 }
 
