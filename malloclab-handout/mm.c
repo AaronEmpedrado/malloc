@@ -385,8 +385,12 @@ static void *extend_heap(size_t words)
 
     /* Allocate an even number of words to maintain alignment */
     size = (words % 2) ? (words+1) * WSIZE : words * WSIZE;
-    if ((long)(bp = mem_sbrk(size)) == -1)
+    if((bp = mem_sbrk(size)) == -1){
         return NULL;
+    }
+    if (size < MIN_BLK_SIZE){
+        size = MIN_BLK_SIZE;        /* Round it up to align */
+    }
 
     /* Initialize free block header/footer and the epilogue header */
     PUT(HDRP(bp), PACK(size, 0)); /* Free block header */
