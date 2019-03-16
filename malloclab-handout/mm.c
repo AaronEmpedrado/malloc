@@ -453,6 +453,41 @@ static int check_invariant(void){
     return 0;
 }
 
+/*
+ *scopeBLK is a scope to check what the contents of our block is for debugging (via printf)
+ */
+static void scopeBLK(void *bp) {
+    int hdr_size, ftr_size,
+        hdr_alloc, ftr_alloc;
 
+        hdr_size = GET_SIZE(HDRP(bp));
+        ftr_size = GET_SIZE(FTRP(bp));
+        hdr_alloc = GET_ALLOC(HDRP(bp));
+        ftr_alloc = GET_ALLOC(FTRP(bp));
 
+        if(hdr_size == 0) {
+            printf("Reached the end of the free list\n");
+            printf("Address of epilogue: %p\n", bp);
+            return;
+        }
+        if(hdr_alloc){      //The block is allocated => scope it
+            printf("Address: %p\n", bp);
+            printf("Header: [%d,%d]\n", hdr_size, hdr_alloc);
+            printf("Footer: [%d,%d]\n", ftr_size, ftr_alloc);
+        } else{             //The block is not allocated (or maybe ftr shows alloc but ont hdr)
+            /* Free blocks include pointers in our implementation */
+            printf("Address:  %p\n", bp);
+            printf("Header:   [%d,%d]\n", hdr_size, hdr_alloc);
+            printf("Previous: %p\n", GET_PREV_FREE(bp));           
+            printf("Next:     %p\n", GET_NEXT_FREE(bp));           
+            printf("Footer:   [%d,%d]\n", ftr_size, ftr_alloc);
+        }
+}
+
+/*
+ *checkBLK is a checker to see if our block is consistent   
+ */
+static void checkBLK(void *bp){
+
+}
 
