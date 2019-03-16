@@ -412,21 +412,16 @@ static int multofeight(size_t asize) {
 
 /* Deleting a free block from the explicit list, updating pointers appropriately */
 static void delete_freeblk(void *bp) {
-    void *prev_blk = (void *)GET_PREV_FREE(bp);
-    void *next_blk = (void *)GET_NEXT_FREE(bp);
-
-    /* check for edge case => are we root? */
-    if(bp == (void *)freeblk_root) {
-        freeblk_root = (char *) next_blk;       //update root
+    /* Having implementation insert only at head simplifies immensely! */
+    /* Update forward links */
+    if(GET_PREV_FREE(bp)){  /* Case: Not root */
+        SET_NEXT_PTR(GET_PREV_FREE(bp), GET_NEXT_FREE(bp));
+    }else {
+        /* Case: We are root */
+        freeblk_root = GET_NEXT_FREE(bp);
     }
-
-    /* if not root, update pointers appropriately */
-    if(prev_blk != NULL && GET_NEXT_FREE(prev_blk) == bp) {
-        SET_NEXT_PTR(prev_blk, next_blk);       //link prev to next
-    }
-    if(next_blk != NULL && GET_PREV_FREE(next_blk) == bp) {
-        SET_PREV_PTR(next_blk, prev_blk);       //link next to prev
-    }
+    /* Now we can update backwards links */
+    SET_PREV_PTR(GET_NEXT_FREE(bp), GET_PREV_FREE(bp));
 }
 
 
