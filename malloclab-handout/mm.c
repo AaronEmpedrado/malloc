@@ -229,12 +229,12 @@ void *mm_realloc(void *ptr, size_t size)
     size_t aSize = MAX(ALIGN(size) + DSIZE, 2*DSIZE);
 
     /* A couple simple check cases */
+    if(ptr == NULL){        //ptr is null case
+        return mm_malloc(size);
+    }
     if(size == 0) {         //size == 0  case
         mm_free(ptr);
         return NULL;
-    }
-    if(ptr == NULL){        //ptr is null case
-        return mm_malloc(size);
     }
     if(aSize <= oldSize) {
         return ptr;
@@ -264,13 +264,13 @@ void *mm_realloc(void *ptr, size_t size)
 void mm_free(void *bp)
 {
     /* check if bp is a valid ptr */
-    if(bp == 0) {
-        return;
-    }
-    /* Check that we have initialized the heap */
-    if(heap_listp == 0) {
-        mm_init();
-    }
+    // if(bp == 0) {
+    //     return;
+    // }
+    //  Check that we have initialized the heap 
+    // if(heap_listp == 0) {
+    //     mm_init();
+    // }
 
     size_t size = GET_SIZE(HDRP(bp));
     /* Update Tags (free) */
