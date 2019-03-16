@@ -264,13 +264,13 @@ void *mm_realloc(void *ptr, size_t size)
 void mm_free(void *bp)
 {
     /* check if bp is a valid ptr */
-    // if(bp == 0) {
-    //     return;
-    // }
-    //  Check that we have initialized the heap 
-    // if(heap_listp == 0) {
-    //     mm_init();
-    // }
+    if(bp == 0) {
+        return;
+    }
+    /* Check that we have initialized the heap */
+    if(heap_listp == 0) {
+        mm_init();
+    }
 
     size_t size = GET_SIZE(HDRP(bp));
     /* Update Tags (free) */
@@ -331,11 +331,11 @@ static void *extend_heap(size_t words)
 
     /* Allocate an even number of words to maintain alignment */
     size = (words % 2) ? (words+1) * WSIZE : words * WSIZE;
-    if((bp = mem_sbrk(size)) == (void *)-1){
-        return NULL;
-    }
     if (size < MIN_BLK_SIZE){
         size = MIN_BLK_SIZE;        /* Round it up to align */
+    }
+    if((bp = mem_sbrk(size)) == (void *)-1){
+        return NULL;
     }
 
     /* Initialize free block header/footer and the epilogue header */
