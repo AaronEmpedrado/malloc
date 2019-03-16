@@ -494,7 +494,7 @@ static void checkBLK(void *bp){
 
     /* Tag Match check */
     if(GET(HDRP(bp)) != GET(FTRP(bp)))
-        printf("Error: (%p) does not have matching header/footer tags.\n");
+        printf("Error: (%p) does not have matching header/footer tags.\n", bp);
     return;
 }
 
