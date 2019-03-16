@@ -334,27 +334,21 @@ void mm_free(void *bp)
     add_freeblk(ptr);                   //add to explicit free list
 }
 
+/*********************************************************************************************/
 /*
  * Helper functions 
  *
  */
+/*********************************************************************************************/
 
 /* Finds where the block we want to allocate should go */
 static void *find_fit(size_t asize) {
-    /* Changed first fit to a next fit search */
-    char *old_rover = rover;        //make a copy of rover
-
-    /* Traverse the list to the end, looking for a fit */
-    while(GET_SIZE(HDRP(rover)) != 0) {         //size 0 block indicates end
-        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE(HDRP(rover)))) {  
-            return rover;
-        }
-        rover = NEXT_BLKP(rover);       //point to next rover
-    }
-    /* Traverse the first half of list [root, rover] if still haven't found a fit */
-    for(rover = heap_listp; rover < old_rover; rover = NEXT_BLKP(rover)){
-        if(!GET_ALLOC(HDRP(rover)) && (asize <= GET_SIZE(HDRP(rover)))){
-            return rover;
+    /* Went back to first fit search approach for simplicity */
+    void *bp;
+    /* Just traverse the list until we find a fit */
+    for(bp = freeblk_root; GET_ALLOC(HDRP(bp)) == 0; bp = GET_NEXT_FREE(bp)){
+        if(!GET_ALLOC(HDRP(bp)) && (asize <= GET_SIZE(HDRP(bp)))) {     /* Fit found */
+            return bp;
         }
     }
     return NULL;       //no fit found :[
