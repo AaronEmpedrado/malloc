@@ -7,6 +7,7 @@
  * Header | Prev_Ptr | Next_Ptr | Payload | Footer
  * Optimized further by taking out pointers from allocated blocks
  *
+ * Insertions into the free list are at the root/head for simplicity
  *
  */
 #include <stdio.h>
@@ -135,51 +136,51 @@ int mm_init(void)
     return 0;                   //we're all good => return 0
 }
 
-
-// added for implicit list book code
+/*
+ * Coalesce if necessary (contiguous free blocks) to avoid false fragmentation 
+ */
 static void *coalesce(void *bp)
 {
-    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp)));
+    //printf("Inside coalesce! \n");        //for debugging
+    size_t prev_alloc = GET_ALLOC(FTRP(PREV_BLKP(bp))) || PREV_BLKP(bp) == bp;
     size_t next_alloc = GET_ALLOC(HDRP(NEXT_BLKP(bp)));
     size_t size = GET_SIZE(HDRP(bp));
 
-    /* Added pointers for xlist */
-    void *prev_blk = PREV_BLKP(bp);
-    void *next_blk = NEXT_BLKP(bp);
+    // /* Added pointers for xlist */
+    // void *prev_blk = PREV_BLKP(bp);
+    // void *next_blk = NEXT_BLKP(bp);
+    /* Found a way to avoid having to declare ptrs => helper funcs*/
 
     if (prev_alloc && next_alloc) {                 /* Case 1 */
-        PUT(HDRP(bp), PACK(size, 0));   //update the tags
-        PUT(FTRP(bp), PACK(size, 0));
+        insertAtRoot(bp);
         return bp;                                  /* Previous and next blocks both allocated */
     }
 
     else if (prev_alloc && !next_alloc) {           /* Case 2 */
         size += GET_SIZE(HDRP(NEXT_BLKP(bp)));      /* Previous block allocated, next block free */
+        delete_freeblk(NEXT_BLKP(bp));
         PUT(HDRP(bp), PACK(size, 0));
         PUT(FTRP(bp), PACK(size,0));
-        delete_freeblk(next_blk);
     }
 
     else if (!prev_alloc && next_alloc) {           /* Case 3 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp)));      /* Previous block free, next block allocated */
-        PUT(FTRP(bp), PACK(size, 0));
+        delete_freeblk(PREV_BLKP(bp));
+        PUT(FTRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-        delete_freeblk(prev_blk);
-        bp = prev_blk;
+        bp = PREV_BLKP(bp);
     }
 
     else {                                          /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
-            GET_SIZE(FTRP(NEXT_BLKP(bp)));
-        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
-        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
+                GET_SIZE(HDRP(NEXT_BLKP(bp)));
         delete_freeblk(next_blk);
         delete_freeblk(prev_blk);                   //remember to delete both prev and next in case 4
+        PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
+        PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
     }
-    if((rover > (char *)bp && rover < NEXT_BLKP(bp))){      //optimization, just updated our old_rover
-        rover = bp;
-    }
+    insertAtRoot(bp);   /* Handled cases, now insert it in front of free list */
     return bp;
 }
 
