@@ -64,7 +64,7 @@ static char *freeblk_root = 0;   //points to the first block of the explicit lis
 /* Basic constants and macros */
 #define WSIZE 4     /* Word and header/footer size (bytes)  => 32 bit system */
 #define DSIZE 8     /* Double word size (bytes) */
-#define CHUNKSIZE (1<<13) /* Extend heap by this amount (4096 bytes) */
+#define CHUNKSIZE (1<<13) /* Extend heap by this amount (4096*2 bytes) */
 #define MIN_BLK_SIZE 3*DSIZE  /* For explicit free list, HDR,PTRS,Payload,FTR = 24bytes */        
 
 /* Macros for offset from bp (pointer to payload) */
@@ -198,10 +198,6 @@ void *mm_malloc(size_t size)
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
-    /* make sure our heap is initialized */
-    if(heap_listp == 0) {
-        mm_init();
-    }
 
     /* Figure out how much we should allocate */
     asize = MAX(MIN_BLK_SIZE, ALIGN(size) + DSIZE);
