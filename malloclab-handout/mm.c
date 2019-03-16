@@ -250,7 +250,7 @@ void *mm_realloc(void *ptr, size_t size)
 
     /* No change in size => don't do anything */
     if(oldSize == aSize) {
-        return oldptr;
+        return ptr;
     }
 
     size_t mergeSize = oldSize;
