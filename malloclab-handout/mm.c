@@ -1,13 +1,13 @@
 /*
- * mm-naive.c - The fastest, least memory-efficient malloc package.
+ * mm.c - Aaron and Chelly's Version
  * 
- * In this naive approach, a block is allocated by simply incrementing
- * the brk pointer.  A block is pure payload. There are no headers or
- * footers.  Blocks are never coalesced or reused. Realloc is
- * implemented directly using mm_malloc and mm_free.
+ * Implementation: Explicit Free List using Doubly Link Lists for free blocks 
  *
- * NOTE TO STUDENTS: Replace this header comment with your own header
- * comment that gives a high level description of your solution.
+ * Blocks are organized like the following:
+ * Header | Prev_Ptr | Next_Ptr | Payload | Footer
+ * Optimized further by taking out pointers from allocated blocks
+ *
+ *
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -56,15 +56,15 @@ static int mm_check(void);
 
 /* Global Variables */
 static char *heap_listp = 0;    //points to the prologue block
-static char *freeblk_root = NULL;   //points to the first block of the explicit list
-static char *rover;                 //for next fit implementation
+static char *freeblk_root = 0;   //points to the first block of the explicit list
+// static char *rover;                 //for next fit implementation
 
 
 /* Basic constants and macros */
 #define WSIZE 4     /* Word and header/footer size (bytes)  => 32 bit system */
 #define DSIZE 8     /* Double word size (bytes) */
 #define CHUNKSIZE (1<<12) /* Extend heap by this amount (4096 bytes) */
-#define MIN_BLK_SIZE 2*DSIZE  /* For implicit free list, using header and footer (nonzero payload) */        
+#define MIN_BLK_SIZE 3*DSIZE  /* For explicit free list, HDR,PTRS,Payload,FTR = 24bytes */        
 
 /* Macros for offset from bp (pointer to payload) */
 #define NEXT_OFFSET WSIZE
@@ -93,8 +93,8 @@ static char *rover;                 //for next fit implementation
 
 /* Explicit List macros */
 /* Get ptr to next or prev free block in explicit list */
-#define GET_NEXT_FREE(bp) (GET(bp + NEXT_OFFSET))
-#define GET_PREV_FREE(bp) (GET(bp + PREV_OFFSET))
+#define GET_NEXT_FREE(bp) (*(void **)(bp + NEXT_OFFSET))
+#define GET_PREV_FREE(bp) (*(void **)(bp + PREV_OFFSET))
 
 /* Macros to update pointers */
 #define SET_NEXT_PTR(bp, newptr) (PUT(bp + NEXT_OFFSET, newptr))
@@ -104,10 +104,16 @@ static char *rover;                 //for next fit implementation
 /* Prototypes for helper functions */
 static int multofeight(size_t asize);
 static void delete_freeblk(void *bp);
-static void add_freeblk(void *bp);
+// static void add_freeblk(void *bp);
+static void insertAtRoot(void *bp);
 
 /* Prototypes for heap checker helper functions */
 static int check_invariant(void);
+static void printBLK(void *bp);
+static void checkBLK(void *bp);
+
+
+/*******************************************************************************/
 
 /* 
  * mm_init - initialize the malloc package.
@@ -115,24 +121,17 @@ static int check_invariant(void);
 int mm_init(void)
 {
     /* Create the initial empty heap */
-    if ((heap_listp = mem_sbrk(4*WSIZE)) == (void *)-1)
+    if ((heap_listp = mem_sbrk(2*MIN_BLK_SIZE)) == (void *)-1)
         return -1;
     PUT(heap_listp, 0); /* Alignment padding */
     PUT(heap_listp + (1*WSIZE), PACK(DSIZE, 1)); /* Prologue header */
-    PUT(heap_listp + (2*WSIZE), PACK(DSIZE, 1)); /* Prologue footer */
-    PUT(heap_listp + (3*WSIZE), PACK(0, 1)); /* Epilogue header */
-    heap_listp += (2*WSIZE);
+    PUT(heap_listp + (2*WSIZE), 0); /* Prologue footer */
+    PUT(heap_listp + (3*WSIZE), 0); /* Epilogue header */
+    freeblk_root = heap_listp + DSIZE;  /* initialize root */
 
-    rover = heap_listp; //initialize the rover to first block
-
-    /* Extend the empty heap with a free block of CHUNKSIZE bytes */
-    void *new_blkp = extend_heap(CHUNKSIZE/WSIZE);
-    if (new_blkp == NULL)
-        return -1;              //if any error occurred
-    freeblk_root = new_blkp;
-    /* Initialize pointers */
-    SET_NEXT_PTR(freeblk_root, NULL);
-    SET_PREV_PTR(freeblk_root, NULL);
+    /* Extend the empty heap with a free block of 4 bytes */
+    if (extend_heap(WSIZE) == NULL)
+        return -1;              //if any error occurred (weren't able to extend)
     return 0;                   //we're all good => return 0
 }
 
