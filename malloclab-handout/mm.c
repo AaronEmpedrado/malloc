@@ -89,8 +89,8 @@ static void *freeblk_root = 0;   //points to the first block of the explicit lis
 #define FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 /* Given block ptr bp, compute address of next and previous blocks */
-#define NEXT_BLKP(bp) ((char *)(bp) + GET_SIZE(((char *)(bp) - WSIZE)))     //((char *)(bp) - WSIZE)) points to header
-#define PREV_BLKP(bp) ((char *)(bp) - GET_SIZE(((char *)(bp) - DSIZE)))     //((char *)(bp) - DSIZE)) points to footer of prev block
+#define NEXT_BLKP(bp) ((void *)(bp) + GET_SIZE(HDRP(bp)))     //((char *)(bp) - WSIZE)) points to header
+#define PREV_BLKP(bp) ((void *)(bp) - GET_SIZE(HDRP(bp) - WSIZE))     //((char *)(bp) - DSIZE)) points to footer of prev block
 
 /* Explicit List macros */
 /* Get ptr to next or prev free block in explicit list */
