@@ -229,89 +229,35 @@ void *mm_malloc(size_t size)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    void *newptr;
-    void *retptr;
-    size_t oldSize;
+    size_t oldSize = GET_SIZE(HDRP(ptr));
+    size_t aSize = MAX(ALIGN(size) + DSIZE, 2*DSIZE);
 
+    /* A couple simple check cases */
     if(size == 0) {         //size == 0  case
         mm_free(ptr);
-        return freeblk_root;    //or should it be NULL?
+        return NULL;
     }
-
-    // newptr = mm_malloc(size);
-    // if (newptr == NULL)     
-    //     return NULL;
     if(ptr == NULL){        //ptr is null case
         return mm_malloc(size);
     }
-
-    //Falls through if ptr is not NULL and we actually reallocate
-    oldSize = GET_SIZE(HDRP(ptr));       
-    size_t aSize = multofeight(size);              //adjust the realloc size
-
-    /* No change in size => don't do anything */
-    if(oldSize == aSize) {
+    if(aSize <= oldSize) {
         return ptr;
-    }
-
-    size_t mergeSize = oldSize;
-
-    /* Initialize some useful pointers and relevant data */
-    void   *prevptr = PREV_BLKP(ptr);  
-    size_t prevalloc = GET_ALLOC(FTRP(prevptr));
-    size_t prevptr_size = GET_SIZE(FTRP(prevptr)); 
-
-    void   *nextptr = NEXT_BLKP(ptr);    
-    size_t nextalloc = GET_ALLOC(HDRP(nextptr)); 
-    size_t nextptr_size = GET_SIZE(HDRP(nextptr));
-
-    /* Case where previous block is allocated */
-    if(prevalloc) {
-        /* Previous Allocated, Next is free */
-        if(!nextalloc) {
-            mergeSize = oldSize + nextptr_size;
-            delete_freeblk(nextptr);
-        }
-        retptr = ptr;
-    } else {  /* Case where previous block was free */
-        /* Update mergeSize */
-        /* Previous free, next is free */
-        if(!nextalloc) {
-            mergeSize += prevptr_size + nextptr_size;
-            delete_freeblk(nextptr);
-        } else {    /* Previous free, next allocated */
-            mergeSize += prevptr_size;
-        }
-
-        retptr = prevptr;
-
-        if(mergeSize >= aSize) {
-            delete_freeblk(prevptr);
-            memcpy(prevptr, ptr, (oldSize - 8));
-        }
-    }
-    
-    /* Check if we need to re-align */
-    if(mergeSize >= aSize) {
-        /* Do we need to realign? */
-        if((mergeSize - aSize) < MIN_BLK_SIZE) {
-            PUT(HDRP(retptr), PACK(mergeSize, 1));
-            PUT(FTRP(retptr), PACK(mergeSize, 1));
+    } else {        //aSize > oldSize
+        size_t isNextAlloc = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+        size_t mergeSize = oldSize + GET_SIZE(HDRP(NEXT_BLKP(ptr)));
+        if(!isNextAlloc && (mergeSize >= aSize)) {
+            /* Readjust to bigger block size, update tags */
+            delete_freeblk(NEXT_BLKP(ptr));
+            PUT(HDRP(ptr), PACK(mergeSize, 1));
+            PUT(FTRP(ptr), PACK(mergeSize, 1));
+            return ptr;
         } else {
-            PUT(HDRP(retptr), PACK(aSize, 1));
-            PUT(FTRP(retptr), PACK(aSize, 1));
-
-            PUT(HDRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
-            PUT(FTRP(NEXT_BLKP(retptr)), PACK(mergeSize - aSize, 0));
-            add_freeblk(NEXT_BLKP(retptr));
+            void *newptr = mm_malloc(aSize);
+            place(newptr, aSize);            
+            memcpy(newptr, ptr, aSize);
+            mm_free(ptr);
+            return newptr;
         }
-        return  prevptr;
-    } else {
-        newptr = mm_malloc(size);
-        memcpy(newptr, ptr, oldSize);
-
-        mm_free(ptr);
-        return newptr;
     }
 }
 
