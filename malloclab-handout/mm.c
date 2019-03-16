@@ -98,8 +98,8 @@ static void *freeblk_root = 0;   //points to the first block of the explicit lis
 #define GET_PREV_FREE(bp) (*(void **)(bp + PREV_OFFSET))
 
 /* Macros to update pointers */
-#define SET_NEXT_PTR(bp, newptr) (PUT(bp + NEXT_OFFSET, newptr))
-#define SET_PREV_PTR(bp, newptr) (PUT(bp + PREV_OFFSET, newptr))
+#define SET_NEXT_PTR(bp, newptr) (GET_NEXT_FREE(bp) = newptr)
+#define SET_PREV_PTR(bp, newptr) (GET_PREV_FREE(bp) = newptr)
 
 
 /* Prototypes for helper functions */
