@@ -28,7 +28,7 @@
  ********************************************************/
 team_t team = {
     /* Team name */
-    "team cool",    
+    "team swiggity swag",    
     /* First member's full name */
     "Aaron-Patrick Empedrado",
     /* First member's NetID */
@@ -184,30 +184,32 @@ static void *coalesce(void *bp)
     return bp;
 }
 
-
+/*
+ * mm_malloc which allocates blocks according to the alignment
+ * the allocater shouldn't collide with other allocated blocks
+ * allocated by incrementing our ptr
+ */
 void *mm_malloc(size_t size)
 {
-    size_t asize; /* Adjusted block size */
-    size_t extendsize; /* Amount to extend heap if no fit */
-    char *bp;
+    size_t asize;           /* Adjusted block size */
+    size_t extendsize;      /* Amount to extend heap if no fit */
+    void *bp;
 
     /* Ignore spurious requests */
     if (size == 0)
         return NULL;
-
     /* make sure our heap is initialized */
     if(heap_listp == 0) {
         mm_init();
     }
 
-    /* Adjust block size to include overhead and alignment reqs. */
-    if (size <= DSIZE)
-        asize = 2*DSIZE;
-    else
-        asize = DSIZE * ((size + (DSIZE) + (DSIZE-1)) / DSIZE);
+    /* Figure out how much we should allocate */
+    asize = MAX(MIN_BLK_SIZE, ALIGN(size) + DSIZE);
 
+    /* Adjust block size to include overhead and alignment reqs. */
     /* Search the free list for a fit */
     if ((bp = find_fit(asize)) != NULL) {
+        //printf("Attempting to allocate: searching free list atm.\n");         //For debugging
         place(bp, asize);
         return bp;
     }
@@ -216,7 +218,6 @@ void *mm_malloc(size_t size)
     extendsize = MAX(asize,CHUNKSIZE);
     if ((bp = extend_heap(extendsize/WSIZE)) == NULL)
         return NULL;
-    add_freeblk(bp);
     place(bp, asize);
     return bp;
 }
