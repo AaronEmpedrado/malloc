@@ -77,16 +77,16 @@ static void *freeblk_root = 0;   //points to the first block of the explicit lis
 #define PACK(size, alloc) ((size) | (alloc))        //basically initializes a header or footer
 
 /* Read and write a word at address p */
-#define GET(p) (*(unsigned int *)(p))
-#define PUT(p, val) (*(unsigned int *)(p) = (val))
+#define GET(p) (*(size_t *)(p))
+#define PUT(p, val) (*(size_t *)(p) = (val))
 
 /* Read the size and allocated fields from address p */
 #define GET_SIZE(p) (GET(p) & ~0x7)     //zero out last 3 bits (only consider size)
 #define GET_ALLOC(p) (GET(p) & 0x1)     //obtain last bit (allocated or not)
 
 /* Given block ptr bp, compute address of its header and footer */
-#define HDRP(bp) ((char *)(bp) - WSIZE)
-#define FTRP(bp) ((char *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
+#define HDRP(bp) ((void *)(bp) - WSIZE)
+#define FTRP(bp) ((void *)(bp) + GET_SIZE(HDRP(bp)) - DSIZE)
 
 /* Given block ptr bp, compute address of next and previous blocks */
 #define NEXT_BLKP(bp) ((void *)(bp) + GET_SIZE(HDRP(bp)))     //((char *)(bp) - WSIZE)) points to header
@@ -103,7 +103,7 @@ static void *freeblk_root = 0;   //points to the first block of the explicit lis
 
 
 /* Prototypes for helper functions */
-static int multofeight(size_t asize);
+// static int multofeight(size_t asize);
 static void delete_freeblk(void *bp);
 // static void add_freeblk(void *bp); => replaced with more convenient insert func for new DLL implementation (below)
 static void insertAtRoot(void *bp);
@@ -347,14 +347,16 @@ static void *extend_heap(size_t words)
     return coalesce(bp);
 }
 
-/* Rounds sizes to align by DWORDs */
-static int multofeight(size_t asize) {
-    if(asize <= DSIZE) {
-        return MIN_BLK_SIZE;
-    } else{
-        return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
-    }
-}
+
+/* Opted to just use the align macro instead */
+// /* Rounds sizes to align by DWORDs */
+// static int multofeight(size_t asize) {
+//     if(asize <= DSIZE) {
+//         return MIN_BLK_SIZE;
+//     } else{
+//         return (asize + (DSIZE - (asize % DSIZE)) );    //round up to next mult of 8
+//     }
+// }
 
 /* Deleting a free block from the explicit list, updating pointers appropriately */
 static void delete_freeblk(void *bp) {
