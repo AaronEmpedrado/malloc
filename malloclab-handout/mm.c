@@ -8,7 +8,7 @@
  * Optimized further by taking out pointers from allocated blocks
  *
  * Insertions into the free list are at the root/head for simplicity
- *
+ * First fit search used for finding fits
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -404,26 +404,20 @@ static void insertAtRoot(void *bp) {
 /* Heap Checker */
 static int mm_check(void) {
     int sum = 0;
-
+    void *temp = freeblk_root;
+    /* Epilogue and prologue checks */
     sum += check_invariant();
     
-     /* Implement this
-     //is every block in the free list marked as free?
-     //are there any contiguous free blocks that somehow escaped coalescing?
-     //is every free block actually in the free list?
-     //do the pointers in the free list point to valid free blocks?
-     //do any allocated blocks overlap?
-     //do the pointers in a heap block point to valid heap addresses?
+    if((GET_SIZE(HDRP(heap_listp)) != MIN_BLK_SIZE) || !GET_ALLOC(HDRP(heap_listp)))
+        printf("Prologue header is corrupt.\n");
+    scopeBLK(heap_listp);
 
-    //check invariants
-        //prologue block is 8byte allocated
-        //epilogue block is 0 byte allocated
+    /* Scope through and check each block */
+    while(temp){
+        scopeBLK();
+        checkBLK();
+    }
 
-      
-     * write subroutines for each check and call in here
-     * have them return 0 if they're good and keep adding the values
-     * if our sum ends up being 0, return the invert of that (nonzero means we good)
-     */
     return sum;
 }
 
@@ -443,14 +437,14 @@ static int check_invariant(void){
     if(!(GET_SIZE(PRO_HDRP) == 8 && GET_ALLOC(PRO_HDRP) == 1 &&
          GET_SIZE(PRO_FTRP) == 8 && GET_ALLOC(PRO_FTRP) == 1)) {
         printf("Prologue invariant failed.");
-        return 1;       //error
+        return 0;       //error
     }   //Check the epilogue invariance 
     else if(GET_SIZE(EPI_BLPK) == 0 && GET_ALLOC(EPI_BLPK) == 1) {
         printf("Epilogue invariant failed.");
-        return 1;       //error
+        return 0;       //error
     }
     //Both invariants pass
-    return 0;
+    return 1;
 }
 
 /*
@@ -485,9 +479,31 @@ static void scopeBLK(void *bp) {
 }
 
 /*
- *checkBLK is a checker to see if our block is consistent   
+ *checkBLK is a checker to see if our block is consistent with the nature of a heap and our implementation   
  */
 static void checkBLK(void *bp){
+    /* Bounds Check */
+    if(GET_NEXT_FREE(bp) < mem_heap_lo() || GET_NEXT_FREE(bp) > mem_heap_hi())
+        printf("Error: Next Linked Block (%p) is out of bounds.\n", GET_NEXT_FREE(bp));
+    if(GET_PREV_FREE(bp) < mem_heap_lo() || GET_PREV_FREE(bp) > mem_heap_hi())
+        printf("Error: Previous Linked Block (%p) is out of bounds.\n", GET_PREV_FREE(bp));
+
+    /* Alignment Check */
+    if((size_t)bp % 8)
+        printf("Error: (%p) does not satisfy DWORD alignment.\n", bp);
+
+    /* Tag Match check */
+    if(GET(HDRP(bp)) != GET(FTRP(bp)))
+        printf("Error: (%p) does not have matching header/footer tags.\n");
     return;
 }
+
+
+
+
+
+
+
+
+
 
