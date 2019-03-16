@@ -248,65 +248,65 @@ static void printBlock(void *bp)
                SUCC(bp), footSize, (footAlloc ? 'a' : 'f'));
 }
 
-//checks block for consistency
-static void checkBlock(void *bp)
-{
+// //checks block for consistency
+// static void checkBlock(void *bp)
+// {
     
-    if (SUCC(bp)< mem_heap_lo() || SUCC(bp) > mem_heap_hi())
-        printf("Error: SUCC pointer %p is not within heap bounds \n"
-               , SUCC(bp));
-    if (PRED(bp)< mem_heap_lo() || PRED(bp) > mem_heap_hi())
-        printf("Error: PRED pointer %p is not within heap bounds \n"
-               , PRED(bp));
-    
-
-    if ((size_t)bp % 8)
-        printf("Error: %p is not aligned\n", bp);
+//     if (SUCC(bp)< mem_heap_lo() || SUCC(bp) > mem_heap_hi())
+//         printf("Error: SUCC pointer %p is not within heap bounds \n"
+//                , SUCC(bp));
+//     if (PRED(bp)< mem_heap_lo() || PRED(bp) > mem_heap_hi())
+//         printf("Error: PRED pointer %p is not within heap bounds \n"
+//                , PRED(bp));
     
 
-    if (GET(HEADER_PTR(bp)) != GET(FOOTER_PTR(bp)))
-        printf("Error: header does not match footer\n");
-}
+//     if ((size_t)bp % 8)
+//         printf("Error: %p is not aligned\n", bp);
+    
 
-//checks heap for consistency
-int mm_checkheap(int x)
-{
-    char *temp_ptr=0;
+//     if (GET(HEADER_PTR(bp)) != GET(FOOTER_PTR(bp)))
+//         printf("Error: header does not match footer\n");
+// }
 
-    void *bp = list_head;
-    if (x)
-        printf("Heap (%p):\n", list_head);
+// //checks heap for consistency
+// int mm_checkheap(int x)
+// {
+//     char *temp_ptr=0;
+
+//     void *bp = list_head;
+//     if (x)
+//         printf("Heap (%p):\n", list_head);
     
-    if ((GET_SIZE(HEADER_PTR(heap_listp)) != OVERHEAD) ||
-        !GET_ALLOC(HEADER_PTR(heap_listp)))
-        printf("Corrupt prologue header\n");
-    checkBlock(heap_listp); //
+//     if ((GET_SIZE(HEADER_PTR(heap_listp)) != OVERHEAD) ||
+//         !GET_ALLOC(HEADER_PTR(heap_listp)))
+//         printf("Corrupt prologue header\n");
+//     checkBlock(heap_listp); //
     
-    for (bp = list_head; GET_ALLOC(HEADER_PTR(bp))==0; bp = SUCC(bp))
-    {
-        if (x)
-            printBlock(bp);
-        checkBlock(bp);
-    }
+//     for (bp = list_head; GET_ALLOC(HEADER_PTR(bp))==0; bp = SUCC(bp))
+//     {
+//         if (x)
+//             printBlock(bp);
+//         checkBlock(bp);
+//     }
     
-    if (x)
-        printBlock(bp);
+//     if (x)
+//         printBlock(bp);
     
-    if ((GET_SIZE(HEADER_PTR(bp)) != 0) || !(GET_ALLOC(HEADER_PTR(bp))))
-        printf("Corrupt epilogue header\n");
+//     if ((GET_SIZE(HEADER_PTR(bp)) != 0) || !(GET_ALLOC(HEADER_PTR(bp))))
+//         printf("Corrupt epilogue header\n");
 
         
-    temp_ptr = list_head;
-    while((*temp_ptr) != NULL) {
-        if(FOOTER_PTR(temp_ptr) >= HEADER_PTR(NEXT_BLOCK_PTR(temp_ptr))) {
-            printf("block at %p overlaps with block at %p", 
-                temp_ptr, NEXT_BLOCK_PTR(temp_ptr));
-            return 0;
-        }
-        temp_ptr = NEXT_BLOCK_PTR(temp_ptr);
-    }
-    return 1;
-}
+//     temp_ptr = list_head;
+//     while((*temp_ptr) != NULL) {
+//         if(FOOTER_PTR(temp_ptr) >= HEADER_PTR(NEXT_BLOCK_PTR(temp_ptr))) {
+//             printf("block at %p overlaps with block at %p", 
+//                 temp_ptr, NEXT_BLOCK_PTR(temp_ptr));
+//             return 0;
+//         }
+//         temp_ptr = NEXT_BLOCK_PTR(temp_ptr);
+//     }
+//     return 1;
+// }
 
 /* mm_init - initialize the malloc package.
  * 
