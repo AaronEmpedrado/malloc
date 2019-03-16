@@ -229,7 +229,7 @@ void *mm_malloc(size_t size)
 void *mm_realloc(void *ptr, size_t size)
 {
 
-size_t oSize = GET_SIZE(HEADER_PTR(ptr));
+size_t oSize = GET_SIZE(HDRP(ptr));
 size_t nSize = MAX(ALIGN(size) + DSIZE, 2*DSIZE);
 
 if(!ptr)
@@ -250,14 +250,14 @@ if(nSize <= oSize)
 }
 else
 {
-    size_t next = GET_ALLOC(HEADER_PTR(NEXT_BLOCK_PTR(ptr)));
-    size_t total_size = oSize + GET_SIZE(HEADER_PTR(NEXT_BLOCK_PTR(ptr)));
+    size_t next = GET_ALLOC(HDRP(NEXT_BLKP(ptr)));
+    size_t total_size = oSize + GET_SIZE(HDRP(NEXT_BLKP(ptr)));
     
     if(!next && (total_size >= nSize))
     {   
-        delete_freeblk(NEXT_BLOCK_PTR(ptr));
-        PUT(HEADER_PTR(ptr), PACK(total_size,1));
-        PUT(FOOTER_PTR(ptr), PACK(total_size, 1));
+        delete_freeblk(NEXT_BLKP(ptr));
+        PUT(HDRP(ptr), PACK(total_size,1));
+        PUT(FTRP(ptr), PACK(total_size, 1));
         return ptr;
     }
     else 
