@@ -228,10 +228,8 @@ void *mm_malloc(size_t size)
  */
 void *mm_realloc(void *ptr, size_t size)
 {
-    void *oldptr = ptr;
     void *newptr;
     void *retptr;
-    size_t aSize;
     size_t oldSize;
 
     if(size == 0) {         //size == 0  case
@@ -248,24 +246,24 @@ void *mm_realloc(void *ptr, size_t size)
 
     //Falls through if ptr is not NULL and we actually reallocate
     oldSize = GET_SIZE(HDRP(oldptr));       
-    aSize = multofeight(size);              //adjust the realloc size
+    size_t aSize = multofeight(size);              //adjust the realloc size
 
     /* No change in size => don't do anything */
     if(oldSize == aSize) {
         return oldptr;
     }
 
-    /* Initialize some useful pointers and relevant data */
-    void   *nextptr = NEXT_BLKP(ptr);    
-    size_t nextalloc = GET_ALLOC(HDRP(nextptr)); 
-    size_t nextptr_size = GET_SIZE(HDRP(nextptr));
+    size_t mergeSize = oldSize;
 
+    /* Initialize some useful pointers and relevant data */
     void   *prevptr = PREV_BLKP(ptr);  
     size_t prevalloc = GET_ALLOC(FTRP(prevptr));
     size_t prevptr_size = GET_SIZE(FTRP(prevptr)); 
 
+    void   *nextptr = NEXT_BLKP(ptr);    
+    size_t nextalloc = GET_ALLOC(HDRP(nextptr)); 
+    size_t nextptr_size = GET_SIZE(HDRP(nextptr));
 
-    size_t mergeSize = oldSize;
     /* Case where previous block is allocated */
     if(prevalloc) {
         /* Previous Allocated, Next is free */
@@ -288,7 +286,7 @@ void *mm_realloc(void *ptr, size_t size)
 
         if(mergeSize >= aSize) {
             delete_freeblk(prevptr);
-            memcpy(prevptr, ptr, (oldSize - DSIZE));
+            memcpy(prevptr, ptr, (oldSize - 8));
         }
     }
     
