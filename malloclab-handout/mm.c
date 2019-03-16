@@ -56,8 +56,8 @@ static void place(void *bp, size_t asize);
 static int mm_check(void);
 
 /* Global Variables */
-static char *heap_listp = 0;    //points to the prologue block
-static char *freeblk_root = 0;   //points to the first block of the explicit list
+static void *heap_listp = 0;    //points to the prologue block
+static void *freeblk_root = 0;   //points to the first block of the explicit list
 // static char *rover;                 //for next fit implementation
 
 
@@ -326,7 +326,7 @@ static void place(void *bp, size_t asize) {
 /* Extends the heap by the CHUNKSIZE */
 static void *extend_heap(size_t words)
 {
-    char *bp;
+    void *bp;
     size_t size;
 
     /* Allocate an even number of words to maintain alignment */
