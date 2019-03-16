@@ -105,7 +105,7 @@ static char *freeblk_root = 0;   //points to the first block of the explicit lis
 /* Prototypes for helper functions */
 static int multofeight(size_t asize);
 static void delete_freeblk(void *bp);
-// static void add_freeblk(void *bp);
+// static void add_freeblk(void *bp); => replaced with more convenient insert func for new DLL implementation (below)
 static void insertAtRoot(void *bp);
 
 /* Prototypes for heap checker helper functions */
@@ -425,17 +425,18 @@ static void delete_freeblk(void *bp) {
 }
 
 
-/* Adding a free block to the front of explicit list, updating pointers appropriately */
-static void add_freeblk(void *bp) {
-    //Initialize new block's pointers
-    SET_PREV_PTR(bp, NULL);     
-    SET_NEXT_PTR(bp, freeblk_root);
-    //Update Root
-    if(freeblk_root != NULL) {
-        SET_PREV_PTR(freeblk_root, bp);     //link root blk to bp
-    }
-    freeblk_root = (char *)bp;              //update the addition as the new root
-}
+/* Replacing this with a more convenient insert func for new DLL implementation */
+// /* Adding a free block to the front of explicit list, updating pointers appropriately */
+// static void add_freeblk(void *bp) {
+//     //Initialize new block's pointers
+//     SET_PREV_PTR(bp, NULL);     
+//     SET_NEXT_PTR(bp, freeblk_root);
+//     //Update Root
+//     if(freeblk_root != NULL) {
+//         SET_PREV_PTR(freeblk_root, bp);     //link root blk to bp
+//     }
+//     freeblk_root = (char *)bp;              //update the addition as the new root
+// }
 
 
 /* Heap Checker */
