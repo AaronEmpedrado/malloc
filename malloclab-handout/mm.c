@@ -245,7 +245,7 @@ void *mm_realloc(void *ptr, size_t size)
     }
 
     //Falls through if ptr is not NULL and we actually reallocate
-    oldSize = GET_SIZE(HDRP(oldptr));       
+    oldSize = GET_SIZE(HDRP(ptr));       
     size_t aSize = multofeight(size);              //adjust the realloc size
 
     /* No change in size => don't do anything */
