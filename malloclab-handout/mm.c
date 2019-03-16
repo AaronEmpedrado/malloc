@@ -325,14 +325,17 @@ void mm_free(void *bp)
     if(bp == 0) {
         return;
     }
-
     /* Check that we have initialized the heap */
     if(heap_listp == 0) {
         mm_init();
     }
 
-    void *ptr = coalesce(bp);                       //coalesce if contiguous free blocks
-    add_freeblk(ptr);                   //add to explicit free list
+    size_t size = GET_SIZE(HDRP(bp));
+    /* Update Tags (free) */
+    PUT(HDRP(ptr), PACK(size, 0));
+    PUT(FTRP(ptr), PACK(size, 0));
+
+    coalesce(bp);                       //coalesce if contiguous free blocks
 }
 
 /*********************************************************************************************/
