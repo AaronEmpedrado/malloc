@@ -404,56 +404,56 @@ static void insertAtRoot(void *bp) {
 
 
 /* Heap Checker */
-static int mm_check(void) {
-    int sum = 0;
+// static int mm_check(void) {
+//     int sum = 0;
 
-    sum += check_invariant();
-    /*
-     * Implement this
-     //is every block in the free list marked as free?
-     //are there any contiguous free blocks that somehow escaped coalescing?
-     //is every free block actually in the free list?
-     //do the pointers in the free list point to valid free blocks?
-     //do any allocated blocks overlap?
-     //do the pointers in a heap block point to valid heap addresses?
+//     sum += check_invariant();
+    
+//      * Implement this
+//      //is every block in the free list marked as free?
+//      //are there any contiguous free blocks that somehow escaped coalescing?
+//      //is every free block actually in the free list?
+//      //do the pointers in the free list point to valid free blocks?
+//      //do any allocated blocks overlap?
+//      //do the pointers in a heap block point to valid heap addresses?
 
-    //check invariants
-        //prologue block is 8byte allocated
-        //epilogue block is 0 byte allocated
+//     //check invariants
+//         //prologue block is 8byte allocated
+//         //epilogue block is 0 byte allocated
 
-     * 
-     * write subroutines for each check and call in here
-     * have them return 0 if they're good and keep adding the values
-     * if our sum ends up being 0, return the invert of that (nonzero means we good)
-     */
-    return sum;
-}
+//      * 
+//      * write subroutines for each check and call in here
+//      * have them return 0 if they're good and keep adding the values
+//      * if our sum ends up being 0, return the invert of that (nonzero means we good)
+     
+//     return sum;
+// }
 
 /*
  * Helper functions for the heap checker
  */
 
 /* Check invariant of the prologue and epilogue blocks */
-static int check_invariant(void){
-     // Check the prologue block is 8 byte allocated 
-    char *PRO_BLKP = heap_listp;
-    char *PRO_HDRP = HDRP(PRO_BLKP);
-    char *PRO_FTRP = FTRP(PRO_BLKP);
-    char *EPI_BLPK = mem_heap_hi();
+// static int check_invariant(void){
+//      // Check the prologue block is 8 byte allocated 
+//     char *PRO_BLKP = heap_listp;
+//     char *PRO_HDRP = HDRP(PRO_BLKP);
+//     char *PRO_FTRP = FTRP(PRO_BLKP);
+//     char *EPI_BLPK = mem_heap_hi();
 
-    //Check the prologue block's invariance
-    if(!(GET_SIZE(PRO_HDRP) == 8 && GET_ALLOC(PRO_HDRP) == 1 &&
-         GET_SIZE(PRO_FTRP) == 8 && GET_ALLOC(PRO_FTRP) == 1)) {
-        printf("Prologue invariant failed.");
-        return 1;       //error
-    }   //Check the epilogue invariance 
-    else if(GET_SIZE(EPI_BLPK) == 0 && GET_ALLOC(EPI_BLPK) == 1) {
-        printf("Epilogue invariant failed.");
-        return 1;       //error
-    }
-    //Both invariants pass
-    return 0;
-}
+//     //Check the prologue block's invariance
+//     if(!(GET_SIZE(PRO_HDRP) == 8 && GET_ALLOC(PRO_HDRP) == 1 &&
+//          GET_SIZE(PRO_FTRP) == 8 && GET_ALLOC(PRO_FTRP) == 1)) {
+//         printf("Prologue invariant failed.");
+//         return 1;       //error
+//     }   //Check the epilogue invariance 
+//     else if(GET_SIZE(EPI_BLPK) == 0 && GET_ALLOC(EPI_BLPK) == 1) {
+//         printf("Epilogue invariant failed.");
+//         return 1;       //error
+//     }
+//     //Both invariants pass
+//     return 0;
+// }
 
 
 
