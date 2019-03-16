@@ -331,7 +331,7 @@ static void *extend_heap(size_t words)
 
     /* Allocate an even number of words to maintain alignment */
     size = (words % 2) ? (words+1) * WSIZE : words * WSIZE;
-    if((bp = mem_sbrk(size)) == -1){
+    if((bp = mem_sbrk(size)) == (void *)-1){
         return NULL;
     }
     if (size < MIN_BLK_SIZE){
