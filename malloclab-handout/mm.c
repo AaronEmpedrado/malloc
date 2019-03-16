@@ -174,8 +174,8 @@ static void *coalesce(void *bp)
     else {                                          /* Case 4 */
         size += GET_SIZE(HDRP(PREV_BLKP(bp))) +     /* Previous and next blocks both free */
                 GET_SIZE(HDRP(NEXT_BLKP(bp)));
-        delete_freeblk(next_blk);
-        delete_freeblk(prev_blk);                   //remember to delete both prev and next in case 4
+        delete_freeblk(NEXT_BLKP(bp));
+        delete_freeblk(PREV_BLKP(bp));                   //remember to delete both prev and next in case 4
         PUT(HDRP(PREV_BLKP(bp)), PACK(size, 0));
         PUT(FTRP(NEXT_BLKP(bp)), PACK(size, 0));
         bp = PREV_BLKP(bp);
@@ -278,8 +278,8 @@ void mm_free(void *bp)
 
     size_t size = GET_SIZE(HDRP(bp));
     /* Update Tags (free) */
-    PUT(HDRP(ptr), PACK(size, 0));
-    PUT(FTRP(ptr), PACK(size, 0));
+    PUT(HDRP(bp), PACK(size, 0));
+    PUT(FTRP(bp), PACK(size, 0));
 
     coalesce(bp);                       //coalesce if contiguous free blocks
 }
