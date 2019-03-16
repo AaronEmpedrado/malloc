@@ -439,6 +439,20 @@ static void delete_freeblk(void *bp) {
 // }
 
 
+
+/*
+ * insertAtRoot adds our free block into the beginning of the list for simplicity
+ */
+static void insertAtRoot(void *bp) {
+    /* Prep bp as a root node */
+    SET_PREV_PTR(bp, NULL);
+    if((GET_NEXT_FREE(bp) = freeblk_root) == NULL)  //bp is first node
+        SET_NEXT_PTR(bp, freeblk_root);     //link new root to old root
+    SET_PREV_PTR(freeblk_root, bp);         //link old root to new root
+    freeblk_root = bp;                      //update global root ptr
+}
+
+
 /* Heap Checker */
 static int mm_check(void) {
     int sum = 0;
