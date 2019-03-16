@@ -44,10 +44,9 @@ team_t team = {
 /* rounds up to the nearest multiple of ALIGNMENT */
 #define ALIGN(size) (((size) + (ALIGNMENT-1)) & ~0x7)
 
-
 #define SIZE_T_SIZE (ALIGN(sizeof(size_t)))
 
-//prototypes for static functions
+/* Prototypes for static functions */
 static void *extend_heap(size_t words);
 static void *coalesce(void *bp);
 static void *find_fit(size_t asize);
@@ -134,7 +133,7 @@ int mm_init(void)
     /* Initialize pointers */
     SET_NEXT_PTR(freeblk_root, NULL);
     SET_PREV_PTR(freeblk_root, NULL);
-    return 0;                   //we're all good
+    return 0;                   //we're all good => return 0
 }
 
 
@@ -271,7 +270,7 @@ void *mm_realloc(void *ptr, size_t size)
     if(prevalloc) {
         /* Previous Allocated, Next is free */
         if(!nextalloc) {
-            mergeSize += nextptr_size;
+            mergeSize = oldSize + nextptr_size;
             delete_freeblk(nextptr);
         }
         retptr = ptr;
